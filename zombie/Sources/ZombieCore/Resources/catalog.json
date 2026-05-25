@@ -765,6 +765,182 @@
       "source": { "title": "Killeeshil ambush", "wikipedia": "https://en.wikipedia.org/wiki/Killeeshil_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
       "sensitivityTags": ["two-force", "bounded", "protected-zone", "civilian-risk"],
       "implementationNotes": "Civilian injuries in the historical event are handled as protected no-target cells."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "newry-road-1993",
+      "title": "Battle of Newry Road",
+      "date": "1993-09-23",
+      "place": "Crossmaglen, County Armagh",
+      "tier": "aircraft",
+      "playable": true,
+      "forces": [
+        { "id": "ira-south-armagh", "name": "Provisional IRA", "side": "player", "unit": "South Armagh Brigade armed trucks", "sourceNote": "Wikipedia describes armed trucks engaging British helicopters." },
+        { "id": "british-air-mobile", "name": "British Army", "side": "opponent", "unit": "Army Air Corps and soldiers at Crossmaglen", "sourceNote": "Wikipedia describes helicopters and soldiers around Crossmaglen barracks." }
+      ],
+      "actors": [
+        { "id": "ira-truck-gunner-a", "name": "Truck Gunner A", "side": "player", "role": "gunner", "position": { "x": 2, "y": 5 }, "weapon": "heavy_machine_gun", "stats": { "RE": 6, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Armed truck fire is represented as a support actor." },
+        { "id": "ira-truck-gunner-b", "name": "Truck Gunner B", "side": "player", "role": "gunner", "position": { "x": 4, "y": 5 }, "weapon": "machine_gun", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_advanced"], "sourceNote": "Second truck fire source abstraction." },
+        { "id": "aac-lynx-crew", "name": "Lynx Crew", "side": "opponent", "role": "support", "position": { "x": 9, "y": 3 }, "weapon": "none", "stats": { "RE": 5, "IR": 6, "AP": 4, "PH": 5, "ME": 6 }, "skills": ["evade"], "sourceNote": "Aircrew represented only for scenario side accounting." }
+      ],
+      "map": { "width": 14, "height": 10, "cellYards": 18, "cells": [
+        { "point": { "x": 1, "y": 5 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 5 }, "tags": ["road", "cover"] },
+        { "point": { "x": 4, "y": 5 }, "tags": ["road", "cover"] },
+        { "point": { "x": 8, "y": 4 }, "tags": ["base", "helipad", "objective"] },
+        { "point": { "x": 9, "y": 3 }, "tags": ["helipad"] },
+        { "point": { "x": 11, "y": 6 }, "tags": ["protected"] }
+      ], "protectedCells": [{ "x": 11, "y": 6 }], "notes": "Crossmaglen base, road, and civilian space are abstracted; aircraft lanes are timing markers, not flight procedures." },
+      "objective": { "kind": "air_lane_interdiction", "point": { "x": 8, "y": 4 }, "description": "The IRA side attempts to pressure a helicopter lane; the British side attempts to exit aircraft safely.", "turnLimit": 8 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "armed-truck-a", "side": "player", "label": "Armed Truck A", "path": [{ "x": 0, "y": 5 }, { "x": 1, "y": 5 }, { "x": 2, "y": 5 }, { "x": 3, "y": 5 }], "armor": 1, "passengers": ["ira-truck-gunner-a"], "sourceNote": "Truck movement abstracted as a short route." }
+        ],
+        "explosives": [],
+        "checkpoints": [],
+        "aircraft": [
+          { "id": "lynx-lane-a", "side": "opponent", "label": "Lynx Lane A", "path": [{ "x": 12, "y": 2 }, { "x": 10, "y": 3 }, { "x": 8, "y": 4 }, { "x": 6, "y": 4 }, { "x": 4, "y": 3 }], "altitudeBand": "low", "entryTurn": 1, "exitTurn": 5, "damageThreshold": 2, "sourceNote": "Running helicopter lane abstracted from the article." },
+          { "id": "puma-lane", "side": "opponent", "label": "Puma Lift Lane", "path": [{ "x": 10, "y": 1 }, { "x": 9, "y": 3 }, { "x": 8, "y": 4 }, { "x": 7, "y": 5 }], "altitudeBand": "low", "entryTurn": 2, "exitTurn": 6, "damageThreshold": 3, "sourceNote": "Puma helicopter response represented as timing lane." }
+        ],
+        "indirectFire": [],
+        "structures": [
+          { "id": "crossmaglen-base", "label": "Crossmaglen Base", "point": { "x": 8, "y": 4 }, "armor": 3, "health": 4, "sourceNote": "Base and helipad abstraction." }
+        ],
+        "phases": ["truck_movement", "air_lane", "withdrawal"]
+      },
+      "source": { "title": "Battle of Newry Road", "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Newry_Road", "accessed": "2026-05-25", "confidence": "medium", "notes": "Wikipedia-backed aircraft/vehicle advanced scenario." },
+      "dataConfidence": { "roster": "medium", "map": "low", "weapons": "medium", "timing": "low" },
+      "scopeWarning": "Advanced aircraft scenario using high-level lanes and damage states only; it does not encode operational flight or weapon procedures.",
+      "collections": ["advanced", "aircraft", "early-advanced-demo"],
+      "sensitivityTags": ["two-force", "bounded", "protected-zone", "aircraft-abstraction"],
+      "implementationNotes": "Cycle 104-105 advanced scenario; lanes, markers, and damage events are intentionally abstract."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "lynx-shootdown-1994",
+      "title": "1994 British Army Lynx Shootdown",
+      "date": "1994-03-19",
+      "place": "Crossmaglen, County Armagh",
+      "tier": "aircraft",
+      "playable": true,
+      "forces": [
+        { "id": "ira-south-armagh", "name": "Provisional IRA", "side": "player", "unit": "South Armagh Brigade mortar team", "sourceNote": "Wikipedia describes an IRA mortar attack on a Lynx helicopter." },
+        { "id": "army-air-corps", "name": "British Army", "side": "opponent", "unit": "Army Air Corps Lynx helicopter", "sourceNote": "Wikipedia identifies a British Army Lynx landing at Crossmaglen." }
+      ],
+      "actors": [
+        { "id": "ira-mortar-observer", "name": "IRA Mortar Observer", "side": "player", "role": "support", "position": { "x": 3, "y": 6 }, "weapon": "mortar", "stats": { "RE": 5, "IR": 6, "AP": 4, "PH": 5, "ME": 6 }, "skills": ["evade"], "sourceNote": "Observer abstraction; no firing procedure is modeled." },
+        { "id": "lynx-crew", "name": "Lynx Crew", "side": "opponent", "role": "support", "position": { "x": 8, "y": 4 }, "weapon": "none", "stats": { "RE": 5, "IR": 6, "AP": 4, "PH": 5, "ME": 6 }, "skills": ["evade"], "sourceNote": "Aircrew side marker." }
+      ],
+      "map": { "width": 12, "height": 10, "cellYards": 20, "cells": [
+        { "point": { "x": 8, "y": 4 }, "tags": ["helipad", "base", "objective"] },
+        { "point": { "x": 3, "y": 6 }, "tags": ["cover"] },
+        { "point": { "x": 7, "y": 5 }, "tags": ["protected"] }
+      ], "protectedCells": [{ "x": 7, "y": 5 }], "notes": "Crossmaglen helipad is a structure marker; nearby civilian space is protected." },
+      "objective": { "kind": "aircraft_damage", "point": { "x": 8, "y": 4 }, "description": "The IRA side attempts an abstract strike against the helicopter lane; the British side attempts safe landing/exit.", "turnLimit": 7 },
+      "mechanics": {
+        "vehicles": [],
+        "explosives": [],
+        "checkpoints": [],
+        "aircraft": [
+          { "id": "lynx-landing-lane", "side": "opponent", "label": "Lynx Landing Lane", "path": [{ "x": 10, "y": 2 }, { "x": 9, "y": 3 }, { "x": 8, "y": 4 }, { "x": 8, "y": 5 }], "altitudeBand": "landing", "entryTurn": 1, "exitTurn": 4, "damageThreshold": 1, "sourceNote": "Landing lane abstraction from the article." }
+        ],
+        "indirectFire": [
+          { "id": "abstract-mortar-round", "side": "player", "label": "Abstract Mortar Impact", "setupTurn": 1, "warningTurn": 2, "impactTurn": 3, "target": { "x": 8, "y": 4 }, "scatter": [{ "x": 8, "y": 4 }, { "x": 8, "y": 5 }], "radius": 1, "abstractEffect": "helicopter damage state check", "sourceNote": "Impact modeled as deterministic timing, not a weapon recipe." }
+        ],
+        "structures": [
+          { "id": "crossmaglen-helipad", "label": "Crossmaglen Helipad", "point": { "x": 8, "y": 4 }, "armor": 2, "health": 3, "sourceNote": "Helipad/base abstraction." }
+        ],
+        "phases": ["approach", "warning", "impact", "rescue"]
+      },
+      "source": { "title": "1994 British Army Lynx shootdown", "wikipedia": "https://en.wikipedia.org/wiki/1994_British_Army_Lynx_shootdown", "accessed": "2026-05-25", "confidence": "medium", "notes": "Wikipedia-backed aircraft/mortar advanced scenario." },
+      "dataConfidence": { "roster": "medium", "map": "low", "weapons": "medium", "timing": "medium" },
+      "scopeWarning": "Advanced aircraft and indirect-fire abstraction; civilian cells are protected and no operational weapon details are represented.",
+      "collections": ["advanced", "aircraft", "mortar-abstraction"],
+      "sensitivityTags": ["two-force", "bounded", "protected-zone", "aircraft-abstraction", "indirect-fire"],
+      "implementationNotes": "Cycle 106-107 aircraft damage scenario with deterministic warning and impact events."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "newry-mortar-1985",
+      "title": "1985 Newry Mortar Attack",
+      "date": "1985-02-28",
+      "place": "Newry, County Down",
+      "tier": "mortar",
+      "playable": false,
+      "forces": [
+        { "id": "ira-newry", "name": "Provisional IRA", "side": "player", "unit": "South Armagh Brigade and Newry unit", "sourceNote": "Wikipedia attributes the attack to the IRA." },
+        { "id": "ruc-newry", "name": "RUC", "side": "opponent", "unit": "Newry police station", "sourceNote": "Wikipedia describes the RUC station target." }
+      ],
+      "actors": [
+        { "id": "ira-newry-fire-control", "name": "IRA Fire Control Marker", "side": "player", "role": "support", "position": { "x": 2, "y": 6 }, "weapon": "mortar", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 5, "ME": 5 }, "skills": ["evade"], "sourceNote": "Marker only; no weapon operation modeled." },
+        { "id": "ruc-station-marker", "name": "RUC Station Marker", "side": "opponent", "role": "sentry", "position": { "x": 8, "y": 4 }, "weapon": "none", "stats": { "RE": 4, "IR": 4, "AP": 4, "PH": 5, "ME": 5 }, "skills": [], "sourceNote": "Station side marker." }
+      ],
+      "map": { "width": 12, "height": 9, "cellYards": 18, "cells": [
+        { "point": { "x": 8, "y": 4 }, "tags": ["base", "objective"] },
+        { "point": { "x": 7, "y": 4 }, "tags": ["building"] },
+        { "point": { "x": 5, "y": 5 }, "tags": ["protected"] }
+      ], "protectedCells": [{ "x": 5, "y": 5 }], "notes": "Police station and surrounding civilian area are abstracted; this remains non-playable review content." },
+      "objective": { "kind": "deferred_indirect_fire", "point": { "x": 8, "y": 4 }, "description": "Deferred scenario used to test indirect-fire warnings, structures, and sensitivity rules.", "turnLimit": 5 },
+      "mechanics": {
+        "vehicles": [],
+        "explosives": [],
+        "checkpoints": [],
+        "aircraft": [],
+        "indirectFire": [
+          { "id": "newry-mortar-salvo", "side": "player", "label": "Abstract Mortar Salvo", "setupTurn": 1, "warningTurn": 2, "impactTurn": 3, "target": { "x": 8, "y": 4 }, "scatter": [{ "x": 8, "y": 4 }, { "x": 7, "y": 4 }], "radius": 1, "abstractEffect": "station structure damage check", "sourceNote": "Salvo is represented only as a timed abstract event." }
+        ],
+        "structures": [
+          { "id": "newry-ruc-station", "label": "Newry RUC Station", "point": { "x": 8, "y": 4 }, "armor": 2, "health": 3, "sourceNote": "Station abstraction for non-playable testing." }
+        ],
+        "phases": ["setup", "warning", "impact", "aftermath"]
+      },
+      "source": { "title": "1985 Newry mortar attack", "wikipedia": "https://en.wikipedia.org/wiki/1985_Newry_mortar_attack", "accessed": "2026-05-25", "confidence": "medium", "notes": "Deferred because the event is not a bounded playable skirmish." },
+      "dataConfidence": { "roster": "medium", "map": "low", "weapons": "medium", "timing": "medium" },
+      "scopeWarning": "Deferred indirect-fire content for testing only; it cannot be launched as an ordinary playable battle.",
+      "collections": ["deferred-review", "mortar-abstraction"],
+      "sensitivityTags": ["deferred", "protected-zone", "civilian-risk", "indirect-fire"],
+      "implementationNotes": "Cycle 109 deferred mortar scenario retained for validation and UI review, not ordinary play."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "osnabruck-mortar-1996",
+      "title": "Osnabrück Mortar Attack",
+      "date": "1996-06-28",
+      "place": "Osnabrück, Germany",
+      "tier": "deferred",
+      "playable": false,
+      "forces": [
+        { "id": "ira-europe", "name": "Provisional IRA", "side": "player", "unit": "Mainland Europe unit", "sourceNote": "Wikipedia describes an IRA unit based in mainland Europe." },
+        { "id": "british-garrison", "name": "British Army", "side": "opponent", "unit": "Quebec Barracks, Osnabrück Garrison", "sourceNote": "Wikipedia identifies the British Army barracks target." }
+      ],
+      "actors": [
+        { "id": "ira-osnabruck-marker", "name": "IRA Indirect-Fire Marker", "side": "player", "role": "support", "position": { "x": 2, "y": 5 }, "weapon": "mortar", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 5, "ME": 5 }, "skills": ["evade"], "sourceNote": "Marker only; no operational detail." },
+        { "id": "garrison-marker", "name": "Garrison Marker", "side": "opponent", "role": "sentry", "position": { "x": 8, "y": 4 }, "weapon": "none", "stats": { "RE": 4, "IR": 4, "AP": 4, "PH": 5, "ME": 5 }, "skills": [], "sourceNote": "Barracks side marker." }
+      ],
+      "map": { "width": 12, "height": 8, "cellYards": 20, "cells": [
+        { "point": { "x": 8, "y": 4 }, "tags": ["base", "objective"] },
+        { "point": { "x": 6, "y": 5 }, "tags": ["protected"] }
+      ], "protectedCells": [{ "x": 6, "y": 5 }], "notes": "Out-of-region base attack retained only as deferred source-review content." },
+      "objective": { "kind": "out_of_region_review", "point": { "x": 8, "y": 4 }, "description": "Deferred scenario used to validate out-of-region handling and release filters.", "turnLimit": 4 },
+      "mechanics": {
+        "vehicles": [],
+        "explosives": [],
+        "checkpoints": [],
+        "aircraft": [],
+        "indirectFire": [
+          { "id": "osnabruck-mortar-event", "side": "player", "label": "Abstract Mortar Event", "setupTurn": 1, "warningTurn": 2, "impactTurn": 3, "target": { "x": 8, "y": 4 }, "scatter": [{ "x": 8, "y": 4 }], "radius": 1, "abstractEffect": "barracks structure damage review", "sourceNote": "Abstract timing event only." }
+        ],
+        "structures": [
+          { "id": "quebec-barracks", "label": "Quebec Barracks", "point": { "x": 8, "y": 4 }, "armor": 2, "health": 3, "sourceNote": "Barracks abstraction." }
+        ],
+        "phases": ["source_review", "warning", "impact"]
+      },
+      "source": { "title": "Osnabrück mortar attack", "wikipedia": "https://en.wikipedia.org/wiki/Osnabr%C3%BCck_mortar_attack", "accessed": "2026-05-25", "confidence": "medium", "notes": "Deferred because it is out-of-region for the main Troubles demo scope." },
+      "dataConfidence": { "roster": "medium", "map": "low", "weapons": "medium", "timing": "medium" },
+      "scopeWarning": "Out-of-region deferred content for release-filter and source-review validation only.",
+      "collections": ["deferred-review", "mortar-abstraction", "out-of-region"],
+      "sensitivityTags": ["deferred", "out-of-region", "protected-zone", "indirect-fire"],
+      "implementationNotes": "Cycle 110 deferred out-of-region scenario; never launched as ordinary playable battle."
     }
   ]
 }

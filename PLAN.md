@@ -68,6 +68,26 @@ Verified gates for cycles 1-100:
 - `xcodebuild -project zombie.xcodeproj -scheme Zombie -configuration Debug -destination 'platform=macOS,variant=Mac Catalyst' build`
 - `git diff --check`
 
+Cycles 101-200 have also been run into a local demo-candidate baseline:
+
+- Added aircraft lanes, indirect-fire timing, structure health, advanced events, and playable advanced scenarios for Newry Road and the 1994 Lynx shootdown.
+- Added deferred/review-only mortar content for Newry and Osnabruck with explicit scope warnings and release filters.
+- Added data confidence, scope warnings, scenario collections, search, completion records, JSONL event export, catalog checksums, and diagnostic manifests.
+- Expanded the Mac Catalyst browser with search, collection filtering, advanced tier filters, confidence display, source warnings, aircraft/mortar board markers, and mechanics details.
+- Added unit coverage for advanced simulation, deferred filtering, search, collections, completeness, exports, and diagnostics.
+- Added Xcode UI smoke coverage for launch, browse, run preview, and event-log display.
+- Added release scripts and docs for QA, packaging, diagnostics, sensitivity review, performance notes, storage/privacy, license checks, demo script, release notes, and artifact manifests.
+
+Verified gates for cycles 101-200:
+
+- `swift test`
+- `swift run ZombieRegression`
+- `swift run ZombieRegression --include-deferred`
+- `xcodebuild -project zombie.xcodeproj -scheme Zombie -configuration Debug -destination 'platform=macOS,variant=Mac Catalyst' test`
+- `zombie/Scripts/package_demo.sh`
+- `zombie/Scripts/collect_diagnostics.sh`
+- `git diff --check`
+
 ## 200 Cycle Map
 
 | Cycle | Focus | Deliverable | Test Gate |

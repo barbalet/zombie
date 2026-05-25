@@ -45,6 +45,20 @@ Scenario data should include:
 - Civilian handling note: excluded, abstracted as protected no-fire space, or not present in the scenario slice.
 - Implementation tier: infantry-ready, vehicle/explosive module, aircraft/mortar module, or excluded/deferred.
 
+## Current Demo State
+
+The first 200-cycle implementation now includes a local SwiftPM workspace and `zombie.xcodeproj` Mac Catalyst app. The app loads the bundled catalog, searches and filters scenarios, shows source links, warnings, force/actor panels, tactical grid previews, confidence metadata, and deterministic regression previews.
+
+The bundled catalog currently contains 24 scenarios:
+
+- 8 early infantry scenarios.
+- 8 vehicle scenarios.
+- 4 checkpoint/base scenarios.
+- 2 playable aircraft/advanced scenarios.
+- 2 deferred mortar/review scenarios.
+
+Advanced aircraft and mortar content uses abstract lanes, warning markers, impact events, and structure health. It does not model operational weapon procedures. Civilian-risk content is represented only through protected noncombat cells and scope warnings.
+
 ## Candidate Battles
 
 These are the current Wikipedia-backed candidates. "Early" means suitable for the first playable demo using a small infantry board. "Vehicle" needs convoy, mine, checkpoint, or vehicle rules. "Aircraft" needs helicopter/air lane rules. "Defer" means useful historically but not for the first demo, usually because the page centers civilian disorder, off-duty/civilian presence, or a one-sided bombing rather than a bounded two-force skirmish.

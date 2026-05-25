@@ -115,6 +115,12 @@ public enum ScenarioCatalog {
                 issue(.error, "vehicle/checkpoint scenarios require vehicle routes or checkpoint structures")
             }
         }
+        if scenario.tier == .aircraft && scenario.mechanics.aircraft.isEmpty {
+            issue(.error, "aircraft scenarios require at least one aircraft lane")
+        }
+        if scenario.tier == .mortar && scenario.mechanics.indirectFire.isEmpty {
+            issue(.error, "mortar scenarios require at least one indirect-fire plan")
+        }
         for vehicle in scenario.mechanics.vehicles {
             if vehicle.path.isEmpty {
                 issue(.error, "vehicle \(vehicle.id) requires a route")
@@ -129,13 +135,51 @@ public enum ScenarioCatalog {
         for checkpoint in scenario.mechanics.checkpoints where !contains(checkpoint.point, in: scenario.map) {
             issue(.error, "checkpoint \(checkpoint.id) is outside the map")
         }
+        for aircraft in scenario.mechanics.aircraft {
+            if aircraft.path.isEmpty {
+                issue(.error, "aircraft \(aircraft.id) requires a lane")
+            }
+            if aircraft.entryTurn < 1 || aircraft.exitTurn < aircraft.entryTurn {
+                issue(.error, "aircraft \(aircraft.id) has invalid entry/exit turns")
+            }
+            for point in aircraft.path where !contains(point, in: scenario.map) {
+                issue(.error, "aircraft \(aircraft.id) lane leaves the map")
+            }
+        }
+        for fire in scenario.mechanics.indirectFire {
+            if fire.setupTurn < 1 || fire.warningTurn < fire.setupTurn || fire.impactTurn < fire.warningTurn {
+                issue(.error, "indirect fire \(fire.id) has invalid timing")
+            }
+            if !contains(fire.target, in: scenario.map) {
+                issue(.error, "indirect fire \(fire.id) target is outside the map")
+            }
+            for point in fire.scatter where !contains(point, in: scenario.map) {
+                issue(.error, "indirect fire \(fire.id) scatter leaves the map")
+            }
+        }
+        for structure in scenario.mechanics.structures {
+            if !contains(structure.point, in: scenario.map) {
+                issue(.error, "structure \(structure.id) is outside the map")
+            }
+            if structure.health < 1 {
+                issue(.error, "structure \(structure.id) must have positive health")
+            }
+        }
+        let confidenceValues = [scenario.dataConfidence.roster, scenario.dataConfidence.map, scenario.dataConfidence.weapons, scenario.dataConfidence.timing]
+        if confidenceValues.contains(where: { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+            issue(.error, "data confidence fields are required")
+        }
+        if (scenario.tier == .aircraft || scenario.tier == .mortar || scenario.tier == .deferred || scenario.sensitivityTags.contains("civilian-risk")) &&
+            scenario.scopeWarning.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            issue(.error, "advanced, deferred, and civilian-risk scenarios require a scope warning")
+        }
         if scenario.sensitivityTags.contains("civilian-risk") && !scenario.sensitivityTags.contains("protected-zone") {
             issue(.error, "civilian-risk scenarios must declare protected-zone handling")
         }
         if scenario.sensitivityTags.contains("contested") && scenario.implementationNotes.isEmpty {
             issue(.error, "contested scenarios require implementation notes")
         }
-        if !scenario.playable && scenario.tier != .deferred && scenario.tier != .excluded {
+        if !scenario.playable && scenario.tier != .deferred && scenario.tier != .excluded && !scenario.sensitivityTags.contains("deferred") {
             issue(.warning, "non-playable scenario is not marked deferred or excluded")
         }
 

@@ -15,14 +15,19 @@ for issue in validation {
     print(issue.description)
 }
 
+let includeDeferred = CommandLine.arguments.contains("--include-deferred")
 let simulator = ZombieSkirmishSimulator()
-let results = simulator.runCatalog(catalog)
+let results = simulator.runCatalog(catalog, includeDeferred: includeDeferred)
 for result in results {
     print("\(result.passed ? "PASS" : "FAIL") \(result.scenarioID) \(result.tier.rawValue) turns=\(result.turns) events=\(result.events.count) outcome=\(result.outcome)")
+    if CommandLine.arguments.contains("--jsonl") {
+        print((try? ScenarioEventExporter.jsonLines(for: result)) ?? "")
+    }
 }
 
 let failedResults = results.filter { !$0.passed }
 print("zombie regression: \(results.count) scenario(s), \(failedResults.count) failed, \(errors.count) validation error(s)")
+print(DiagnosticReport.manifest(catalog: catalog, results: results))
 
 if !errors.isEmpty || !failedResults.isEmpty {
     exit(1)

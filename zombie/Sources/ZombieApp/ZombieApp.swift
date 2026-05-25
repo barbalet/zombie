@@ -29,6 +29,16 @@ struct ZombieApp: App {
                     store.selectedTier = .vehicle
                 }
                 .keyboardShortcut("2", modifiers: [.command])
+
+                Button("Show Aircraft Scenarios") {
+                    store.selectedTier = .aircraft
+                }
+                .keyboardShortcut("3", modifiers: [.command])
+
+                Button("Show Mortar Scenarios") {
+                    store.selectedTier = .mortar
+                }
+                .keyboardShortcut("4", modifiers: [.command])
             }
         }
     }
@@ -38,9 +48,12 @@ final class ZombieAppStore: ObservableObject {
     @Published var catalog = ZombieScenarioCatalog(schemaVersion: 1, scenarios: [])
     @Published var selectedScenarioID: String?
     @Published var selectedTier: ScenarioTier?
+    @Published var selectedCollectionID = "all"
+    @Published var searchText = ""
     @Published var result: RegressionResult?
     @Published var validationIssues: [ScenarioValidationIssue] = []
     @Published var status = "Loading scenarios..."
+    @Published var completionRecords: [ScenarioCompletionRecord] = []
 
     private let simulator = ZombieSkirmishSimulator()
 
@@ -56,7 +69,12 @@ final class ZombieAppStore: ObservableObject {
     }
 
     var filteredScenarios: [ZombieScenario] {
-        let scenarios = catalog.scenarios.filter { scenario in
+        let searched = ScenarioLibrary.search(searchText, in: catalog)
+        let selectedCollection = ScenarioLibrary.collections(for: catalog).first { $0.id == selectedCollectionID }
+        let scenarios = searched.filter { scenario in
+            if let selectedCollection, selectedCollection.id != "all", !selectedCollection.scenarioIDs.contains(scenario.id) {
+                return false
+            }
             guard let selectedTier else {
                 return true
             }
@@ -84,7 +102,34 @@ final class ZombieAppStore: ObservableObject {
             return
         }
         result = simulator.run(selectedScenario)
+        upsertCompletion(for: selectedScenario, result: result)
         status = "\(selectedScenario.title): \(result?.outcome ?? "no outcome")."
+    }
+
+    var collections: [ScenarioCollection] {
+        ScenarioLibrary.collections(for: catalog)
+    }
+
+    var selectedCompletion: ScenarioCompletionRecord? {
+        guard let id = selectedScenario?.id else {
+            return nil
+        }
+        return completionRecords.first { $0.scenarioID == id }
+    }
+
+    private func upsertCompletion(for scenario: ZombieScenario, result: RegressionResult?) {
+        guard let result else {
+            return
+        }
+        let record = ScenarioCompletionRecord(
+            scenarioID: scenario.id,
+            lastOutcome: result.outcome,
+            lastSeed: UInt32(result.events.count),
+            completedRuns: (completionRecords.first { $0.scenarioID == scenario.id }?.completedRuns ?? 0) + 1,
+            updatedAt: Date()
+        )
+        completionRecords.removeAll { $0.scenarioID == scenario.id }
+        completionRecords.append(record)
     }
 }
 
@@ -94,6 +139,14 @@ struct ZombieRootView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: $store.selectedScenarioID) {
+                Section("Search") {
+                    TextField("Search", text: $store.searchText)
+                    Picker("Collection", selection: $store.selectedCollectionID) {
+                        ForEach(store.collections) { collection in
+                            Text(collection.title).tag(collection.id)
+                        }
+                    }
+                }
                 Section("Filters") {
                     Button("All") { store.selectedTier = nil }
                     ForEach(ScenarioTier.allCases) { tier in
@@ -123,6 +176,7 @@ struct ZombieRootView: View {
         case .vehicle: return "car"
         case .checkpoint: return "building.columns"
         case .aircraft: return "airplane"
+        case .mortar: return "scope"
         case .deferred: return "clock"
         case .excluded: return "xmark.octagon"
         }
@@ -160,6 +214,10 @@ struct ScenarioDetailView: View {
                     Text(store.status)
                         .foregroundStyle(.secondary)
 
+                    Text(scenario.scopeWarning)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+
                     HStack {
                         Link("Wikipedia", destination: scenario.source.wikipedia)
                         Button {
@@ -173,6 +231,8 @@ struct ScenarioDetailView: View {
                     Text(scenario.objective.description)
                         .font(.headline)
 
+                    ConfidenceView(confidence: scenario.dataConfidence)
+
                     ScenarioBoardView(scenario: scenario)
                         .frame(maxWidth: 760)
 
@@ -181,8 +241,14 @@ struct ScenarioDetailView: View {
                         ActorListView(title: "Actors", actors: scenario.actors)
                     }
 
-                    if !scenario.mechanics.vehicles.isEmpty || !scenario.mechanics.explosives.isEmpty || !scenario.mechanics.checkpoints.isEmpty {
+                    if scenario.hasVisibleMechanics {
                         MechanicsView(mechanics: scenario.mechanics)
+                    }
+
+                    if let completion = store.selectedCompletion {
+                        Text("Played \(completion.completedRuns)x, latest outcome: \(completion.lastOutcome)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
 
                     if let result = store.result, result.scenarioID == scenario.id {
@@ -214,6 +280,10 @@ struct ScenarioBoardView: View {
                             Circle().fill(actor(at: point)?.side == .player ? Color.blue : Color.red).padding(5)
                         } else if vehicleTouches(point) {
                             RoundedRectangle(cornerRadius: 3).fill(Color.yellow.opacity(0.75)).padding(7)
+                        } else if aircraftTouches(point) {
+                            Image(systemName: "airplane").font(.caption2).foregroundStyle(.blue)
+                        } else if indirectImpact(at: point) != nil {
+                            Image(systemName: "scope").font(.caption2).foregroundStyle(.red)
                         } else if explosive(at: point) != nil {
                             Image(systemName: "burst.fill").font(.caption2).foregroundStyle(.orange)
                         }
@@ -238,6 +308,14 @@ struct ScenarioBoardView: View {
         scenario.mechanics.vehicles.contains { $0.path.contains(point) }
     }
 
+    private func aircraftTouches(_ point: GridPoint) -> Bool {
+        scenario.mechanics.aircraft.contains { $0.path.contains(point) }
+    }
+
+    private func indirectImpact(at point: GridPoint) -> IndirectFirePlan? {
+        scenario.mechanics.indirectFire.first { $0.target == point || $0.scatter.contains(point) }
+    }
+
     private func color(for point: GridPoint) -> Color {
         if scenario.objective.point == point { return .purple.opacity(0.7) }
         if scenario.map.protectedCellSet.contains(point) { return .black.opacity(0.42) }
@@ -249,7 +327,23 @@ struct ScenarioBoardView: View {
         if tags.contains(.border) { return .orange.opacity(0.45) }
         if tags.contains(.river) { return .cyan.opacity(0.45) }
         if tags.contains(.rail) { return .mint.opacity(0.5) }
+        if tags.contains(.helipad) { return .blue.opacity(0.35) }
         return .green.opacity(0.18)
+    }
+}
+
+struct ConfidenceView: View {
+    let confidence: DataConfidence
+
+    var body: some View {
+        HStack {
+            Label("Roster \(confidence.roster)", systemImage: "person.2")
+            Label("Map \(confidence.map)", systemImage: "map")
+            Label("Weapons \(confidence.weapons)", systemImage: "scope")
+            Label("Timing \(confidence.timing)", systemImage: "clock")
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 }
 
@@ -303,6 +397,15 @@ struct MechanicsView: View {
             ForEach(mechanics.checkpoints) { checkpoint in
                 Text("\(checkpoint.label): alarm turn \(checkpoint.alarmTurn)").font(.callout)
             }
+            ForEach(mechanics.aircraft) { aircraft in
+                Text("\(aircraft.label): turns \(aircraft.entryTurn)-\(aircraft.exitTurn), \(aircraft.altitudeBand) lane").font(.callout)
+            }
+            ForEach(mechanics.indirectFire) { fire in
+                Text("\(fire.label): warning T\(fire.warningTurn), impact T\(fire.impactTurn)").font(.callout)
+            }
+            ForEach(mechanics.structures) { structure in
+                Text("\(structure.label): health \(structure.health), armor \(structure.armor)").font(.callout)
+            }
         }
     }
 }
@@ -321,5 +424,16 @@ struct EventLogView: View {
                     .monospacedDigit()
             }
         }
+    }
+}
+
+extension ZombieScenario {
+    var hasVisibleMechanics: Bool {
+        !mechanics.vehicles.isEmpty ||
+            !mechanics.explosives.isEmpty ||
+            !mechanics.checkpoints.isEmpty ||
+            !mechanics.aircraft.isEmpty ||
+            !mechanics.indirectFire.isEmpty ||
+            !mechanics.structures.isEmpty
     }
 }

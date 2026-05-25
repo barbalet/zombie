@@ -15,6 +15,7 @@
 		AA0000000000000000000106 /* catalog.json in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000008 /* catalog.json */; };
 		AA0000000000000000000107 /* scenario-catalog.schema.json in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000009 /* scenario-catalog.schema.json */; };
 		AA0000000000000000000108 /* ZombieUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000000C /* ZombieUITests.swift */; };
+		AA0000000000000000000109 /* ScenarioArtifacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000000E /* ScenarioArtifacts.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +32,7 @@
 		AA000000000000000000000B /* Zombie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zombie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000000000000000000000C /* ZombieUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZombieUITests.swift; sourceTree = "<group>"; };
 		AA000000000000000000000D /* ZombieUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZombieUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000000000000000000000E /* ScenarioArtifacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenarioArtifacts.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,6 +98,7 @@
 				AA0000000000000000000002 /* ScenarioModels.swift */,
 				AA0000000000000000000003 /* ScenarioCatalog.swift */,
 				AA0000000000000000000004 /* SkirmishSimulation.swift */,
+				AA000000000000000000000E /* ScenarioArtifacts.swift */,
 			);
 			path = zombie/Sources/ZombieCore;
 			sourceTree = "<group>";
@@ -247,6 +250,7 @@
 				AA0000000000000000000102 /* ScenarioModels.swift in Sources */,
 				AA0000000000000000000103 /* ScenarioCatalog.swift in Sources */,
 				AA0000000000000000000104 /* SkirmishSimulation.swift in Sources */,
+				AA0000000000000000000109 /* ScenarioArtifacts.swift in Sources */,
 				AA0000000000000000000101 /* ZombieApp.swift in Sources */,
 				AA0000000000000000000105 /* fieldofchaos_engine.c in Sources */,
 			);

@@ -67,10 +67,33 @@
         "title": { "type": "string", "minLength": 1 },
         "date": { "type": "string", "minLength": 10 },
         "place": { "type": "string", "minLength": 1 },
-        "tier": { "enum": ["early", "vehicle", "checkpoint", "aircraft", "deferred", "excluded"] },
+        "tier": { "enum": ["early", "vehicle", "checkpoint", "aircraft", "mortar", "deferred", "excluded"] },
         "playable": { "type": "boolean" },
         "forces": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/force" } },
         "actors": { "type": "array", "items": { "$ref": "#/$defs/actor" } },
+        "mechanics": {
+          "type": "object",
+          "properties": {
+            "vehicles": { "type": "array" },
+            "explosives": { "type": "array" },
+            "checkpoints": { "type": "array" },
+            "aircraft": { "type": "array" },
+            "indirectFire": { "type": "array" },
+            "structures": { "type": "array" },
+            "phases": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "dataConfidence": {
+          "type": "object",
+          "properties": {
+            "roster": { "type": "string" },
+            "map": { "type": "string" },
+            "weapons": { "type": "string" },
+            "timing": { "type": "string" }
+          }
+        },
+        "scopeWarning": { "type": "string" },
+        "collections": { "type": "array", "items": { "type": "string" } },
         "source": { "$ref": "#/$defs/source" }
       }
     }

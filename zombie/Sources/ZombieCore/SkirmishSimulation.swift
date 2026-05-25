@@ -33,6 +33,10 @@ public final class ZombieSkirmishSimulator {
             )
         }
 
+        if scenario.tier == .aircraft || scenario.tier == .mortar || !scenario.mechanics.aircraft.isEmpty || !scenario.mechanics.indirectFire.isEmpty {
+            return runAdvancedScenario(scenario, maxTurns: maxTurns)
+        }
+
         if scenario.tier == .vehicle || scenario.tier == .checkpoint {
             return runVehicleScenario(scenario, maxTurns: maxTurns)
         }
@@ -43,7 +47,7 @@ public final class ZombieSkirmishSimulator {
     public func runCatalog(_ catalog: ZombieScenarioCatalog, includeDeferred: Bool = false) -> [RegressionResult] {
         catalog.scenarios
             .filter { $0.playable || includeDeferred }
-            .filter { includeDeferred || ($0.tier != .deferred && $0.tier != .excluded && $0.tier != .aircraft) }
+            .filter { includeDeferred || ($0.tier != .deferred && $0.tier != .excluded) }
             .map { run($0) }
     }
 
@@ -181,6 +185,97 @@ public final class ZombieSkirmishSimulator {
         return RegressionResult(scenarioID: scenario.id, tier: scenario.tier, outcome: outcome, turns: limit, events: events, validationErrors: 0, protectedZoneViolations: protectedViolations)
     }
 
+    private func runAdvancedScenario(_ scenario: ZombieScenario, maxTurns: Int?) -> RegressionResult {
+        let limit = maxTurns ?? scenario.objective.turnLimit
+        var eventID = 1
+        var events: [ScenarioEvent] = []
+        var protectedViolations = 0
+        var damagedAircraft = Set<String>()
+        var resolvedImpacts = Set<String>()
+        var structureHealth = Dictionary(uniqueKeysWithValues: scenario.mechanics.structures.map { ($0.id, $0.health) })
+        let protectedCells = scenario.map.protectedCellSet
+        let antiAirScore = scenario.actors.filter { actor in
+            actor.weapon == .heavyMachineGun || actor.weapon == .machineGun || actor.weapon == .rocket || actor.weapon == .mortar
+        }.count
+
+        for turn in 1...max(1, limit) {
+            for lane in scenario.mechanics.aircraft where turn >= lane.entryTurn && turn <= lane.exitTurn {
+                let laneIndex = min(max(turn - lane.entryTurn, 0), max(0, lane.path.count - 1))
+                guard let point = lane.path[safe: laneIndex] else {
+                    continue
+                }
+                if protectedCells.contains(point) {
+                    protectedViolations += 1
+                    events.append(ScenarioEvent(id: eventID, turn: turn, phase: "protected-zone", actor: lane.label, target: "", summary: "\(lane.label) lane intersects protected cell \(point.id)."))
+                    eventID += 1
+                    continue
+                }
+
+                events.append(ScenarioEvent(id: eventID, turn: turn, phase: "aircraft-lane", actor: lane.label, target: "", summary: "\(lane.label) crosses \(point.id) at \(lane.altitudeBand) altitude."))
+                eventID += 1
+
+                if antiAirScore >= lane.damageThreshold && !damagedAircraft.contains(lane.id) && turn > lane.entryTurn {
+                    damagedAircraft.insert(lane.id)
+                    events.append(ScenarioEvent(id: eventID, turn: turn, phase: "aircraft-damage", actor: lane.label, target: scenario.title, summary: "\(lane.label) receives abstract damage and must exit the lane."))
+                    eventID += 1
+                }
+            }
+
+            for fire in scenario.mechanics.indirectFire {
+                if turn == fire.setupTurn {
+                    events.append(ScenarioEvent(id: eventID, turn: turn, phase: "indirect-setup", actor: fire.label, target: "", summary: "\(fire.label) enters setup phase."))
+                    eventID += 1
+                }
+                if turn == fire.warningTurn {
+                    events.append(ScenarioEvent(id: eventID, turn: turn, phase: "indirect-warning", actor: fire.label, target: fire.target.id, summary: "\(fire.label) warning marker appears near \(fire.target.id)."))
+                    eventID += 1
+                }
+                if turn == fire.impactTurn && !resolvedImpacts.contains(fire.id) {
+                    resolvedImpacts.insert(fire.id)
+                    let impact = deterministicImpact(for: fire, scenarioID: scenario.id)
+                    if protectedCells.contains(impact) {
+                        protectedViolations += 1
+                        events.append(ScenarioEvent(id: eventID, turn: turn, phase: "protected-zone", actor: fire.label, target: impact.id, summary: "\(fire.label) impact was blocked from protected cell \(impact.id)."))
+                        eventID += 1
+                        continue
+                    }
+                    events.append(ScenarioEvent(id: eventID, turn: turn, phase: "indirect-impact", actor: fire.label, target: impact.id, summary: "\(fire.label) resolves at \(impact.id): \(fire.abstractEffect)."))
+                    eventID += 1
+
+                    for structure in scenario.mechanics.structures where impact.distance(to: structure.point) <= max(0, fire.radius) {
+                        let previous = structureHealth[structure.id] ?? structure.health
+                        let damage = max(1, 3 - min(2, structure.armor))
+                        structureHealth[structure.id] = max(0, previous - damage)
+                        events.append(ScenarioEvent(id: eventID, turn: turn, phase: "structure-damage", actor: fire.label, target: structure.label, summary: "\(structure.label) health \(previous) -> \(structureHealth[structure.id] ?? 0)."))
+                        eventID += 1
+                    }
+                }
+            }
+        }
+
+        for lane in scenario.mechanics.aircraft where !damagedAircraft.contains(lane.id) {
+            events.append(ScenarioEvent(id: eventID, turn: min(limit, lane.exitTurn), phase: "aircraft-exit", actor: lane.label, target: "", summary: "\(lane.label) exits the scenario lane."))
+            eventID += 1
+        }
+
+        if events.isEmpty {
+            events.append(ScenarioEvent(id: eventID, turn: 0, phase: "advanced", actor: scenario.title, target: "", summary: "No advanced events were generated."))
+        }
+
+        let damagedStructures = structureHealth.values.contains { $0 == 0 }
+        let outcome: String
+        if !damagedAircraft.isEmpty {
+            outcome = "aircraft damaged"
+        } else if damagedStructures {
+            outcome = "structure disabled"
+        } else if !resolvedImpacts.isEmpty {
+            outcome = "indirect fire resolved"
+        } else {
+            outcome = "advanced route completed"
+        }
+        return RegressionResult(scenarioID: scenario.id, tier: scenario.tier, outcome: outcome, turns: limit, events: events, validationErrors: 0, protectedZoneViolations: protectedViolations)
+    }
+
     private func canAttack(attacker: SimActor, target: SimActor, distanceYards: Int) -> Bool {
         var attackerCharacter = attacker.character
         var targetCharacter = target.character
@@ -220,6 +315,14 @@ public final class ZombieSkirmishSimulator {
             hash &*= 16_777_619
         }
         return hash == 0 ? 1 : hash
+    }
+
+    private func deterministicImpact(for fire: IndirectFirePlan, scenarioID: String) -> GridPoint {
+        guard !fire.scatter.isEmpty else {
+            return fire.target
+        }
+        let seed = stableSeed(for: scenarioID, actorID: fire.id, index: fire.impactTurn)
+        return fire.scatter[Int(seed % UInt32(fire.scatter.count))]
     }
 }
 

@@ -2,7 +2,4 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
-swift build
-swift test
-swift run ZombieRegression
 xcodebuild -project zombie.xcodeproj -scheme Zombie -configuration Debug -destination 'platform=macOS,variant=Mac Catalyst' test
