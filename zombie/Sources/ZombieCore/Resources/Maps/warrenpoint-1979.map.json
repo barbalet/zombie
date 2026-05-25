@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "warrenpoint-1979",
+  "width": 14,
+  "height": 9,
+  "cellYards": 12,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "p": [
+      "protected"
+    ],
+    "o": [
+      "road",
+      "objective"
+    ],
+    "0": [
+      "border",
+      "river"
+    ]
+  },
+  "rows": [
+    "##############",
+    "#............#",
+    "#.......c....#",
+    "#.c.c..c.c...#",
+    "====o=.====..#",
+    "#.c.c..c.c...#",
+    "0.....p......#",
+    "#............#",
+    "##############"
+  ],
+  "protectedCells": [
+    {
+      "x": 6,
+      "y": 6
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "River/border and civilian risk are abstracted as protected terrain and no-fire cells. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

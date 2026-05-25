@@ -117,16 +117,81 @@ public struct ScenarioMapCell: Codable, Equatable {
     public var tags: [TerrainTag]
 }
 
+public struct ScenarioMovementProfile: Codable, Equatable {
+    public var defaultCost: Int
+    public var roadCost: Int
+    public var coverCost: Int
+    public var blockedTags: [TerrainTag]
+    public var notes: String
+
+    public static let standard = ScenarioMovementProfile(
+        defaultCost: 2,
+        roadCost: 1,
+        coverCost: 3,
+        blockedTags: [.wall, .building, .base, .checkpoint, .river, .protected],
+        notes: "Roads and lanes are fastest; cover slows movement; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+    )
+
+    public init(defaultCost: Int, roadCost: Int, coverCost: Int, blockedTags: [TerrainTag], notes: String) {
+        self.defaultCost = defaultCost
+        self.roadCost = roadCost
+        self.coverCost = coverCost
+        self.blockedTags = blockedTags
+        self.notes = notes
+    }
+}
+
 public struct ScenarioMap: Codable, Equatable {
     public var width: Int
     public var height: Int
     public var cellYards: Int
     public var cells: [ScenarioMapCell]
     public var protectedCells: [GridPoint]
+    public var movement: ScenarioMovementProfile
     public var notes: String
 
+    enum CodingKeys: String, CodingKey {
+        case width
+        case height
+        case cellYards
+        case cells
+        case protectedCells
+        case movement
+        case notes
+    }
+
+    public init(
+        width: Int,
+        height: Int,
+        cellYards: Int,
+        cells: [ScenarioMapCell],
+        protectedCells: [GridPoint],
+        movement: ScenarioMovementProfile = .standard,
+        notes: String
+    ) {
+        self.width = width
+        self.height = height
+        self.cellYards = cellYards
+        self.cells = cells
+        self.protectedCells = protectedCells
+        self.movement = movement
+        self.notes = notes
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        width = try container.decode(Int.self, forKey: .width)
+        height = try container.decode(Int.self, forKey: .height)
+        cellYards = try container.decode(Int.self, forKey: .cellYards)
+        cells = try container.decode([ScenarioMapCell].self, forKey: .cells)
+        protectedCells = try container.decodeIfPresent([GridPoint].self, forKey: .protectedCells) ?? []
+        movement = try container.decodeIfPresent(ScenarioMovementProfile.self, forKey: .movement) ?? .standard
+        notes = try container.decode(String.self, forKey: .notes)
+    }
+
     public var blockedCells: Set<GridPoint> {
-        Set(cells.filter { $0.tags.contains(.building) || $0.tags.contains(.base) || $0.tags.contains(.checkpoint) }.map(\.point))
+        let blockedTags = Set(movement.blockedTags)
+        return Set(cells.filter { !blockedTags.isDisjoint(with: Set($0.tags)) }.map(\.point))
     }
 
     public var coverCells: Set<GridPoint> {
@@ -135,6 +200,130 @@ public struct ScenarioMap: Codable, Equatable {
 
     public var protectedCellSet: Set<GridPoint> {
         Set(protectedCells + cells.filter { $0.tags.contains(.protected) }.map(\.point))
+    }
+
+    public func contains(_ point: GridPoint) -> Bool {
+        point.x >= 0 && point.y >= 0 && point.x < width && point.y < height
+    }
+
+    public func tags(at point: GridPoint) -> [TerrainTag] {
+        cells.first { $0.point == point }?.tags ?? [.field]
+    }
+
+    public func movementCost(at point: GridPoint) -> Int? {
+        guard contains(point), !blockedCells.contains(point), !protectedCellSet.contains(point) else {
+            return nil
+        }
+
+        let tags = tags(at: point)
+        if tags.contains(.road) || tags.contains(.lane) || tags.contains(.rail) || tags.contains(.exit) {
+            return movement.roadCost
+        }
+        if tags.contains(.cover) || tags.contains(.hedge) || tags.contains(.elevation) {
+            return movement.coverCost
+        }
+        return movement.defaultCost
+    }
+}
+
+public struct ScenarioMapFile: Codable, Equatable {
+    public var schemaVersion: Int
+    public var scenarioID: String
+    public var width: Int
+    public var height: Int
+    public var cellYards: Int
+    public var legend: [String: [TerrainTag]]
+    public var rows: [String]
+    public var protectedCells: [GridPoint]
+    public var movement: ScenarioMovementProfile
+    public var notes: String
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case scenarioID
+        case width
+        case height
+        case cellYards
+        case legend
+        case rows
+        case protectedCells
+        case movement
+        case notes
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        scenarioID = try container.decode(String.self, forKey: .scenarioID)
+        width = try container.decode(Int.self, forKey: .width)
+        height = try container.decode(Int.self, forKey: .height)
+        cellYards = try container.decode(Int.self, forKey: .cellYards)
+        legend = try container.decode([String: [TerrainTag]].self, forKey: .legend)
+        rows = try container.decode([String].self, forKey: .rows)
+        protectedCells = try container.decodeIfPresent([GridPoint].self, forKey: .protectedCells) ?? []
+        movement = try container.decodeIfPresent(ScenarioMovementProfile.self, forKey: .movement) ?? .standard
+        notes = try container.decode(String.self, forKey: .notes)
+    }
+
+    public func materializedMap(expectedScenarioID: String) throws -> ScenarioMap {
+        guard schemaVersion == 1 else {
+            throw ScenarioMapFileError.invalidSchemaVersion(scenarioID)
+        }
+        guard scenarioID == expectedScenarioID else {
+            throw ScenarioMapFileError.scenarioMismatch(expected: expectedScenarioID, actual: scenarioID)
+        }
+        guard rows.count == height else {
+            throw ScenarioMapFileError.invalidHeight(scenarioID)
+        }
+
+        var cells: [ScenarioMapCell] = []
+        for (y, row) in rows.enumerated() {
+            let symbols = row.map { String($0) }
+            guard symbols.count == width else {
+                throw ScenarioMapFileError.invalidWidth(scenarioID, row: y)
+            }
+            for (x, symbol) in symbols.enumerated() {
+                guard let tags = legend[symbol] else {
+                    throw ScenarioMapFileError.unknownSymbol(scenarioID, symbol: symbol)
+                }
+                if !tags.isEmpty {
+                    cells.append(ScenarioMapCell(point: GridPoint(x: x, y: y), tags: tags))
+                }
+            }
+        }
+
+        return ScenarioMap(
+            width: width,
+            height: height,
+            cellYards: cellYards,
+            cells: cells,
+            protectedCells: protectedCells,
+            movement: movement,
+            notes: notes
+        )
+    }
+}
+
+public enum ScenarioMapFileError: Error, CustomStringConvertible {
+    case invalidSchemaVersion(String)
+    case scenarioMismatch(expected: String, actual: String)
+    case invalidHeight(String)
+    case invalidWidth(String, row: Int)
+    case unknownSymbol(String, symbol: String)
+
+    public var description: String {
+        switch self {
+        case .invalidSchemaVersion(let scenarioID):
+            return "Map file for \(scenarioID) must use schemaVersion 1."
+        case .scenarioMismatch(let expected, let actual):
+            return "Map file scenario mismatch: expected \(expected), found \(actual)."
+        case .invalidHeight(let scenarioID):
+            return "Map file for \(scenarioID) has the wrong number of rows."
+        case .invalidWidth(let scenarioID, let row):
+            return "Map file for \(scenarioID) has the wrong width at row \(row)."
+        case .unknownSymbol(let scenarioID, let symbol):
+            return "Map file for \(scenarioID) uses unknown symbol \(symbol)."
+        }
     }
 }
 
@@ -307,6 +496,7 @@ public struct ZombieScenario: Codable, Identifiable, Equatable {
     public var playable: Bool
     public var forces: [ScenarioForce]
     public var actors: [ScenarioActor]
+    public var mapFile: String?
     public var map: ScenarioMap
     public var objective: ScenarioObjective
     public var mechanics: ScenarioMechanics
@@ -327,6 +517,7 @@ public struct ZombieScenario: Codable, Identifiable, Equatable {
         case playable
         case forces
         case actors
+        case mapFile
         case map
         case objective
         case mechanics
@@ -349,6 +540,7 @@ public struct ZombieScenario: Codable, Identifiable, Equatable {
         playable = try container.decode(Bool.self, forKey: .playable)
         forces = try container.decode([ScenarioForce].self, forKey: .forces)
         actors = try container.decode([ScenarioActor].self, forKey: .actors)
+        mapFile = try container.decodeIfPresent(String.self, forKey: .mapFile)
         map = try container.decode(ScenarioMap.self, forKey: .map)
         objective = try container.decode(ScenarioObjective.self, forKey: .objective)
         mechanics = try container.decode(ScenarioMechanics.self, forKey: .mechanics)

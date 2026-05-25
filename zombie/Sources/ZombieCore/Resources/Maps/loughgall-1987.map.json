@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "loughgall-1987",
+  "width": 14,
+  "height": 10,
+  "cellYards": 8,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "C": [
+      "checkpoint"
+    ],
+    "p": [
+      "protected"
+    ],
+    "0": [
+      "checkpoint",
+      "base",
+      "objective"
+    ]
+  },
+  "rows": [
+    "##############",
+    "#............#",
+    "#............#",
+    "#.c.c.c..c...#",
+    "=======......#",
+    "#.c=c.=C0....#",
+    "#.....c....p.#",
+    "#............#",
+    "#............#",
+    "##############"
+  ],
+  "protectedCells": [
+    {
+      "x": 11,
+      "y": 6
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Civilian route is protected and cannot be targeted. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

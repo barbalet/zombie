@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "mullacreevie-1991",
+  "width": 13,
+  "height": 9,
+  "cellYards": 8,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "P": [
+      "building",
+      "protected"
+    ],
+    "o": [
+      "road",
+      "objective"
+    ]
+  },
+  "rows": [
+    "#############",
+    "#...........#",
+    "#...........#",
+    "#.c.c.......#",
+    "====o=......#",
+    "#.c.c.......#",
+    "#.....P.....#",
+    "#...........#",
+    "#############"
+  ],
+  "protectedCells": [
+    {
+      "x": 6,
+      "y": 6
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Housing estate edge is protected from targeting. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

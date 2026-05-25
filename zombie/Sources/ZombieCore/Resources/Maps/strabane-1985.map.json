@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "strabane-1985",
+  "width": 13,
+  "height": 9,
+  "cellYards": 6,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "P": [
+      "building",
+      "protected"
+    ],
+    "E": [
+      "road",
+      "exit",
+      "objective"
+    ],
+    "0": [
+      "road",
+      "lane"
+    ],
+    "1": [
+      "lane",
+      "cover"
+    ]
+  },
+  "rows": [
+    "#############",
+    "#...........#",
+    "#.c.........#",
+    "#c0c..c.c1c.#",
+    "E====P======#",
+    "#c0c..c.c.1.#",
+    "#.c.........#",
+    "#...........#",
+    "#############"
+  ],
+  "protectedCells": [
+    {
+      "x": 5,
+      "y": 4
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Town features are abstracted with protected noncombat cells. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

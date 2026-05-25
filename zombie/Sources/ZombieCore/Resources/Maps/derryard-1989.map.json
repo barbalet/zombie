@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "derryard-1989",
+  "width": 13,
+  "height": 10,
+  "cellYards": 8,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "K": [
+      "checkpoint",
+      "objective"
+    ],
+    "0": [
+      "checkpoint",
+      "cover"
+    ],
+    "1": [
+      "base",
+      "cover"
+    ],
+    "2": [
+      "border",
+      "exit"
+    ]
+  },
+  "rows": [
+    "#############",
+    "#...........#",
+    "#...........#",
+    "#...........#",
+    "#.c.c.c0....#",
+    "========K1.2#",
+    "#.c.c.c.....#",
+    "#...........#",
+    "#...........#",
+    "#############"
+  ],
+  "protectedCells": [
+
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Permanent vehicle checkpoint is abstracted as structures and alarm zone. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

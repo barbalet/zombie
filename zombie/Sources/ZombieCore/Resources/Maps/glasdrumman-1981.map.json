@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "glasdrumman-1981",
+  "width": 14,
+  "height": 10,
+  "cellYards": 8,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "-": [
+      "lane"
+    ],
+    "c": [
+      "cover"
+    ],
+    "0": [
+      "road",
+      "cover",
+      "elevation"
+    ],
+    "1": [
+      "road",
+      "cover",
+      "objective"
+    ],
+    "2": [
+      "lane",
+      "hedge",
+      "cover"
+    ],
+    "3": [
+      "lane",
+      "cover"
+    ]
+  },
+  "rows": [
+    "##############",
+    "#............#",
+    "#............#",
+    "#.c.c.c.c.c.c#",
+    "=0=========1=#",
+    "#.-.c.===.-.c#",
+    "#.2....c..3..#",
+    "#............#",
+    "#............#",
+    "##############"
+  ],
+  "protectedCells": [
+
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Scrapyard, road, and concealed positions are abstracted. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

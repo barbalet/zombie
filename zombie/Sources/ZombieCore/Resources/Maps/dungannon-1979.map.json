@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "dungannon-1979",
+  "width": 13,
+  "height": 9,
+  "cellYards": 10,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "o": [
+      "road",
+      "objective"
+    ]
+  },
+  "rows": [
+    "#############",
+    "#...........#",
+    "#...........#",
+    "#.c.c.......#",
+    "====o=......#",
+    "#.c.c.......#",
+    "#...........#",
+    "#...........#",
+    "#############"
+  ],
+  "protectedCells": [
+
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Ballygawley Road segment abstracted as a route. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

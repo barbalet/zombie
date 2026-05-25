@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "kesh-1984",
+  "width": 14,
+  "height": 9,
+  "cellYards": 6,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "-": [
+      "lane"
+    ],
+    "c": [
+      "cover"
+    ],
+    "P": [
+      "building",
+      "protected"
+    ],
+    "0": [
+      "road",
+      "lane"
+    ],
+    "1": [
+      "lane",
+      "cover"
+    ],
+    "2": [
+      "river",
+      "exit",
+      "objective"
+    ]
+  },
+  "rows": [
+    "##############",
+    "#............#",
+    "#..c.........#",
+    "#..0......1..#",
+    "#..-.cPP.c-c.#",
+    "#.============",
+    "#..c.c.c.c1c2#",
+    "#............#",
+    "##############"
+  ],
+  "protectedCells": [
+    {
+      "x": 6,
+      "y": 4
+    },
+    {
+      "x": 7,
+      "y": 4
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Restaurant/civilian area is protected and cannot be targeted. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

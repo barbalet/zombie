@@ -53,8 +53,6 @@ public final class ZombieSkirmishSimulator {
 
     private func runInfantryScenario(_ scenario: ZombieScenario, maxTurns: Int?) -> RegressionResult {
         let limit = maxTurns ?? scenario.objective.turnLimit
-        let protectedCells = scenario.map.protectedCellSet
-        let blocked = scenario.map.blockedCells.subtracting(protectedCells)
         let violations = 0
         var events: [ScenarioEvent] = []
         var actors = scenario.actors.enumerated().map { index, actor in
@@ -104,13 +102,13 @@ public final class ZombieSkirmishSimulator {
                     ))
                     eventID += 1
                 } else {
-                    let next = actors[index].position.step(toward: actors[targetIndex].position)
-                    if protectedCells.contains(next) {
-                        events.append(ScenarioEvent(id: eventID, turn: turn, phase: "protected-zone", actor: actorName, target: "", summary: "\(actorName) blocked from protected cell \(next.id)."))
-                        eventID += 1
-                    } else if !blocked.contains(next) && !actors.contains(where: { $0.position == next && $0.active }) {
+                    let occupied = Set(actors.enumerated().compactMap { actorIndex, actor in
+                        actorIndex == index || !actor.active ? nil : actor.position
+                    })
+                    if let next = nextStep(from: actors[index].position, toward: actors[targetIndex].position, in: scenario.map, occupied: occupied) {
                         actors[index].position = next
-                        events.append(ScenarioEvent(id: eventID, turn: turn, phase: "move", actor: actorName, target: "", summary: "\(actorName) moves to \(next.id)."))
+                        let terrain = scenario.map.tags(at: next).map(\.rawValue).joined(separator: ",")
+                        events.append(ScenarioEvent(id: eventID, turn: turn, phase: "move", actor: actorName, target: "", summary: "\(actorName) moves to \(next.id) via \(terrain)."))
                         eventID += 1
                     } else {
                         events.append(ScenarioEvent(id: eventID, turn: turn, phase: "wait", actor: actorName, target: "", summary: "\(actorName) waits."))
@@ -291,6 +289,81 @@ public final class ZombieSkirmishSimulator {
             .min { left, right in
                 actor.position.distance(to: actors[left].position) < actor.position.distance(to: actors[right].position)
             }
+    }
+
+    private func nextStep(from start: GridPoint, toward target: GridPoint, in map: ScenarioMap, occupied: Set<GridPoint>) -> GridPoint? {
+        let destinations = Set(neighbors(of: target, in: map, toward: start).filter { point in
+            map.movementCost(at: point) != nil && !occupied.contains(point)
+        })
+        guard !destinations.isEmpty, !destinations.contains(start) else {
+            return nil
+        }
+
+        var frontier = [start]
+        var cameFrom: [GridPoint: GridPoint] = [:]
+        var costSoFar: [GridPoint: Int] = [start: 0]
+
+        while !frontier.isEmpty {
+            let currentIndex = frontier.indices.min { left, right in
+                let leftPoint = frontier[left]
+                let rightPoint = frontier[right]
+                let leftCost = costSoFar[leftPoint, default: Int.max]
+                let rightCost = costSoFar[rightPoint, default: Int.max]
+                if leftCost == rightCost {
+                    return leftPoint.distance(to: target) < rightPoint.distance(to: target)
+                }
+                return leftCost < rightCost
+            } ?? frontier.startIndex
+            let current = frontier.remove(at: currentIndex)
+
+            if destinations.contains(current) {
+                return firstStep(from: start, to: current, cameFrom: cameFrom)
+            }
+
+            for neighbor in neighbors(of: current, in: map, toward: target) {
+                guard !occupied.contains(neighbor), let movementCost = map.movementCost(at: neighbor) else {
+                    continue
+                }
+                let newCost = costSoFar[current, default: 0] + movementCost
+                if newCost < costSoFar[neighbor, default: Int.max] {
+                    costSoFar[neighbor] = newCost
+                    cameFrom[neighbor] = current
+                    if !frontier.contains(neighbor) {
+                        frontier.append(neighbor)
+                    }
+                }
+            }
+        }
+
+        return nil
+    }
+
+    private func firstStep(from start: GridPoint, to destination: GridPoint, cameFrom: [GridPoint: GridPoint]) -> GridPoint? {
+        var current = destination
+        var previous = cameFrom[current]
+        while let previousPoint = previous, previousPoint != start {
+            current = previousPoint
+            previous = cameFrom[current]
+        }
+        return current == start ? nil : current
+    }
+
+    private func neighbors(of point: GridPoint, in map: ScenarioMap, toward target: GridPoint) -> [GridPoint] {
+        [
+            GridPoint(x: point.x + 1, y: point.y),
+            GridPoint(x: point.x - 1, y: point.y),
+            GridPoint(x: point.x, y: point.y + 1),
+            GridPoint(x: point.x, y: point.y - 1)
+        ]
+        .filter { map.contains($0) }
+        .sorted { left, right in
+            let leftDistance = left.distance(to: target)
+            let rightDistance = right.distance(to: target)
+            if leftDistance == rightDistance {
+                return left.id < right.id
+            }
+            return leftDistance < rightDistance
+        }
     }
 
     private func outcome(for actors: [SimActor]) -> String? {

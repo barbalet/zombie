@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "fivemiletown-1993",
+  "width": 13,
+  "height": 9,
+  "cellYards": 8,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "C": [
+      "checkpoint"
+    ],
+    "p": [
+      "protected"
+    ],
+    "o": [
+      "road",
+      "objective"
+    ],
+    "0": [
+      "building",
+      "cover"
+    ]
+  },
+  "rows": [
+    "#############",
+    "#...........#",
+    "#...........#",
+    "#.c0c.......#",
+    "====o=..C...#",
+    "#.c.c..p....#",
+    "#...........#",
+    "#...........#",
+    "#############"
+  ],
+  "protectedCells": [
+    {
+      "x": 7,
+      "y": 5
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Main street route and protected civilian space are abstracted. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

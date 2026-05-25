@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "clonoe-1992",
+  "width": 13,
+  "height": 10,
+  "cellYards": 6,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "-": [
+      "lane"
+    ],
+    "c": [
+      "cover"
+    ],
+    "P": [
+      "building",
+      "protected"
+    ],
+    "O": [
+      "objective"
+    ],
+    "E": [
+      "road",
+      "exit",
+      "objective"
+    ],
+    "0": [
+      "lane",
+      "hedge",
+      "cover"
+    ],
+    "1": [
+      "road",
+      "lane"
+    ]
+  },
+  "rows": [
+    "#############",
+    "#...........#",
+    "#...........#",
+    "#.c.c.c.c0c.#",
+    "E==========O#",
+    "#.c1cPc.c-c.#",
+    "#........0..#",
+    "#...........#",
+    "#...........#",
+    "#############"
+  ],
+  "protectedCells": [
+    {
+      "x": 5,
+      "y": 5
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Church and civilian surroundings are protected noncombat terrain. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "coagh-1991",
+  "width": 13,
+  "height": 9,
+  "cellYards": 6,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "-": [
+      "lane"
+    ],
+    "c": [
+      "cover"
+    ],
+    "P": [
+      "building",
+      "protected"
+    ],
+    "O": [
+      "objective"
+    ],
+    "E": [
+      "road",
+      "exit",
+      "objective"
+    ],
+    "0": [
+      "lane",
+      "cover"
+    ],
+    "1": [
+      "road",
+      "lane"
+    ]
+  },
+  "rows": [
+    "#############",
+    "#...........#",
+    "#...........#",
+    "#.c.c..c.0..#",
+    "E=====P====O#",
+    "#.c1c..c.-..#",
+    "#..c.....0..#",
+    "#...........#",
+    "#############"
+  ],
+  "protectedCells": [
+    {
+      "x": 6,
+      "y": 4
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Village civilian space is protected and not targetable. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

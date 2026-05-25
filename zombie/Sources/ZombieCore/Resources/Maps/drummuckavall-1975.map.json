@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "drummuckavall-1975",
+  "width": 14,
+  "height": 9,
+  "cellYards": 8,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "~": [
+      "river"
+    ],
+    "|": [
+      "border"
+    ],
+    "c": [
+      "cover"
+    ],
+    "0": [
+      "lane",
+      "hedge",
+      "cover"
+    ],
+    "1": [
+      "road",
+      "cover",
+      "elevation",
+      "exit",
+      "objective"
+    ],
+    "2": [
+      "lane",
+      "cover",
+      "elevation"
+    ]
+  },
+  "rows": [
+    "##############",
+    "#............#",
+    "#............#",
+    "#|0c.c...c.c.#",
+    "#=====~~==1==#",
+    "#c0c.c...c.2.#",
+    "#............#",
+    "#............#",
+    "##############"
+  ],
+  "protectedCells": [
+
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Observation post, border edge, stream, and concealed firing positions are abstracted. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

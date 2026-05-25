@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "newry-mortar-1985",
+  "width": 12,
+  "height": 9,
+  "cellYards": 18,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "-": [
+      "lane"
+    ],
+    "c": [
+      "cover"
+    ],
+    "B": [
+      "building"
+    ],
+    "p": [
+      "protected"
+    ],
+    "0": [
+      "building",
+      "base",
+      "objective"
+    ]
+  },
+  "rows": [
+    "############",
+    "#..........#",
+    "#..........#",
+    "#c.c.c...c.#",
+    "#======B0=.#",
+    "#c-c.p...c.#",
+    "#.-........#",
+    "#..........#",
+    "############"
+  ],
+  "protectedCells": [
+    {
+      "x": 5,
+      "y": 5
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Police station and surrounding civilian area are abstracted; this remains non-playable review content. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

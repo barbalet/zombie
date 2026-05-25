@@ -26,6 +26,41 @@ final class ZombieCoreTests: XCTestCase {
         }
     }
 
+    func testExternalMapFilesMaterializeEveryScenario() throws {
+        let catalog = try ScenarioCatalog.bundled()
+
+        for scenario in catalog.scenarios {
+            XCTAssertEqual(scenario.mapFile, "Maps/\(scenario.id).map.json", scenario.id)
+            XCTAssertEqual(scenario.map.cells.count, scenario.map.width * scenario.map.height, scenario.id)
+            XCTAssertFalse(scenario.map.blockedCells.isEmpty, scenario.id)
+            XCTAssertFalse(scenario.map.movement.blockedTags.isEmpty, scenario.id)
+
+            let terrain = Set(scenario.map.cells.flatMap(\.tags))
+            XCTAssertTrue(terrain.contains(.wall), scenario.id)
+            XCTAssertFalse(terrain.isDisjoint(with: [.road, .lane, .rail, .exit]), scenario.id)
+        }
+    }
+
+    func testMapMovementCostsDistinguishRoadCoverAndBlockers() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let scenario = try XCTUnwrap(catalog.scenarios.first { scenario in
+            let cells = scenario.map.cells
+            let blockedTags = Set(scenario.map.movement.blockedTags)
+            return cells.contains { $0.tags.contains(.road) && scenario.map.movementCost(at: $0.point) != nil } &&
+                cells.contains { $0.tags.contains(.cover) && Set($0.tags).isDisjoint(with: [.road, .lane, .rail, .exit]) && scenario.map.movementCost(at: $0.point) != nil } &&
+                cells.contains { !blockedTags.isDisjoint(with: Set($0.tags)) }
+        })
+        let blockedTags = Set(scenario.map.movement.blockedTags)
+
+        let road = try XCTUnwrap(scenario.map.cells.first { $0.tags.contains(.road) && scenario.map.movementCost(at: $0.point) != nil })
+        let cover = try XCTUnwrap(scenario.map.cells.first { $0.tags.contains(.cover) && Set($0.tags).isDisjoint(with: [.road, .lane, .rail, .exit]) && scenario.map.movementCost(at: $0.point) != nil })
+        let blocked = try XCTUnwrap(scenario.map.cells.first { !blockedTags.isDisjoint(with: Set($0.tags)) })
+
+        XCTAssertEqual(scenario.map.movementCost(at: road.point), scenario.map.movement.roadCost)
+        XCTAssertEqual(scenario.map.movementCost(at: cover.point), scenario.map.movement.coverCost)
+        XCTAssertNil(scenario.map.movementCost(at: blocked.point))
+    }
+
     func testFieldOfChaosAdapterProducesUsableCharacters() throws {
         let catalog = try ScenarioCatalog.bundled()
         let scenario = try XCTUnwrap(catalog.scenarios.first { $0.tier == .early })

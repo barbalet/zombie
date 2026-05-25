@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "killeeshil-1994",
+  "width": 13,
+  "height": 9,
+  "cellYards": 8,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "p": [
+      "protected"
+    ],
+    "o": [
+      "road",
+      "objective"
+    ],
+    "g": [
+      "road",
+      "cover"
+    ]
+  },
+  "rows": [
+    "#############",
+    "#...........#",
+    "#.c.c.......#",
+    "#c=g=c......#",
+    "====o=......#",
+    "#c.c.pp.....#",
+    "#...........#",
+    "#...........#",
+    "#############"
+  ],
+  "protectedCells": [
+    {
+      "x": 5,
+      "y": 5
+    },
+    {
+      "x": 6,
+      "y": 5
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Civilian traffic is protected and not simulated as actors. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "glenanne-1991",
+  "width": 13,
+  "height": 9,
+  "cellYards": 10,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "P": [
+      "building",
+      "protected"
+    ],
+    "b": [
+      "base"
+    ],
+    "0": [
+      "checkpoint",
+      "base",
+      "objective"
+    ],
+    "1": [
+      "base",
+      "cover"
+    ]
+  },
+  "rows": [
+    "#############",
+    "#...........#",
+    "#...........#",
+    "#.c.c.......#",
+    "=====b0.1...#",
+    "#.c.c.......#",
+    "#...P.......#",
+    "#...........#",
+    "#############"
+  ],
+  "protectedCells": [
+    {
+      "x": 4,
+      "y": 6
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Nearby civilian property is protected and noncombat. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

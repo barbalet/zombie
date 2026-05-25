@@ -58,6 +58,65 @@
         "sourceNote": { "type": "string" }
       }
     },
+    "terrainTag": {
+      "enum": ["road", "lane", "field", "hedge", "wall", "building", "checkpoint", "base", "border", "river", "rail", "cover", "elevation", "protected", "exit", "objective", "helipad"]
+    },
+    "movementProfile": {
+      "type": "object",
+      "required": ["defaultCost", "roadCost", "coverCost", "blockedTags", "notes"],
+      "properties": {
+        "defaultCost": { "type": "integer", "minimum": 1 },
+        "roadCost": { "type": "integer", "minimum": 1 },
+        "coverCost": { "type": "integer", "minimum": 1 },
+        "blockedTags": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/terrainTag" }
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "mapCell": {
+      "type": "object",
+      "required": ["point", "tags"],
+      "properties": {
+        "point": { "$ref": "#/$defs/point" },
+        "tags": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/terrainTag" }
+        }
+      }
+    },
+    "map": {
+      "type": "object",
+      "required": ["width", "height", "cellYards", "cells", "protectedCells", "notes"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 4 },
+        "height": { "type": "integer", "minimum": 4 },
+        "cellYards": { "type": "integer", "minimum": 1 },
+        "cells": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mapCell" }
+        },
+        "protectedCells": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/point" }
+        },
+        "movement": { "$ref": "#/$defs/movementProfile" },
+        "notes": { "type": "string" }
+      }
+    },
+    "objective": {
+      "type": "object",
+      "required": ["kind", "point", "description", "turnLimit"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "point": { "$ref": "#/$defs/point" },
+        "description": { "type": "string" },
+        "turnLimit": { "type": "integer", "minimum": 1 }
+      }
+    },
     "scenario": {
       "type": "object",
       "required": ["schemaVersion", "id", "title", "date", "place", "tier", "playable", "forces", "actors", "map", "objective", "mechanics", "source", "sensitivityTags", "implementationNotes"],
@@ -71,6 +130,9 @@
         "playable": { "type": "boolean" },
         "forces": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/force" } },
         "actors": { "type": "array", "items": { "$ref": "#/$defs/actor" } },
+        "mapFile": { "type": "string", "minLength": 1 },
+        "map": { "$ref": "#/$defs/map" },
+        "objective": { "$ref": "#/$defs/objective" },
         "mechanics": {
           "type": "object",
           "properties": {
@@ -94,7 +156,9 @@
         },
         "scopeWarning": { "type": "string" },
         "collections": { "type": "array", "items": { "type": "string" } },
-        "source": { "$ref": "#/$defs/source" }
+        "source": { "$ref": "#/$defs/source" },
+        "sensitivityTags": { "type": "array", "items": { "type": "string" } },
+        "implementationNotes": { "type": "string" }
       }
     }
   }

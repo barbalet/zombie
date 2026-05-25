@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "cloghoge-1992",
+  "width": 14,
+  "height": 9,
+  "cellYards": 10,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "C": [
+      "checkpoint"
+    ],
+    "K": [
+      "checkpoint",
+      "objective"
+    ],
+    "0": [
+      "road",
+      "rail"
+    ],
+    "1": [
+      "base",
+      "cover"
+    ]
+  },
+  "rows": [
+    "##############",
+    "#............#",
+    "#............#",
+    "#.c.c.c......#",
+    "=0000===CK1..#",
+    "#.c.c.c......#",
+    "#............#",
+    "#............#",
+    "##############"
+  ],
+  "protectedCells": [
+
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Rail alignment and checkpoint are abstracted. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}

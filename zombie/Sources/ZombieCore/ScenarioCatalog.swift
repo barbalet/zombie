@@ -7,6 +7,7 @@ import FieldOfChaosEngine
 public enum ScenarioCatalogError: Error, CustomStringConvertible {
     case missingBundledCatalog
     case decodeFailed(String)
+    case mapLoadFailed(String)
 
     public var description: String {
         switch self {
@@ -14,6 +15,8 @@ public enum ScenarioCatalogError: Error, CustomStringConvertible {
             return "Bundled zombie scenario catalog was not found."
         case .decodeFailed(let message):
             return "Scenario catalog decode failed: \(message)"
+        case .mapLoadFailed(let message):
+            return "Scenario map load failed: \(message)"
         }
     }
 }
@@ -36,7 +39,10 @@ public enum ScenarioCatalog {
         do {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
-            return try decoder.decode(ZombieScenarioCatalog.self, from: data)
+            let catalog = try decoder.decode(ZombieScenarioCatalog.self, from: data)
+            return try applyExternalMaps(to: catalog, relativeTo: url.deletingLastPathComponent())
+        } catch let error as ScenarioCatalogError {
+            throw error
         } catch {
             throw ScenarioCatalogError.decodeFailed(error.localizedDescription)
         }
@@ -84,6 +90,15 @@ public enum ScenarioCatalog {
         }
         if scenario.map.cellYards < 1 {
             issue(.error, "cellYards must be positive")
+        }
+        if scenario.mapFile?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+            issue(.error, "scenario requires an external map file")
+        }
+        if scenario.map.movement.defaultCost < 1 || scenario.map.movement.roadCost < 1 || scenario.map.movement.coverCost < 1 {
+            issue(.error, "map movement costs must be positive")
+        }
+        if scenario.map.movement.blockedTags.isEmpty {
+            issue(.error, "map movement profile must define blocked tags")
         }
         if !contains(scenario.objective.point, in: scenario.map) {
             issue(.error, "objective point is outside the map")
@@ -187,7 +202,35 @@ public enum ScenarioCatalog {
     }
 
     private static func contains(_ point: GridPoint, in map: ScenarioMap) -> Bool {
-        point.x >= 0 && point.y >= 0 && point.x < map.width && point.y < map.height
+        map.contains(point)
+    }
+
+    private static func applyExternalMaps(to catalog: ZombieScenarioCatalog, relativeTo baseURL: URL) throws -> ZombieScenarioCatalog {
+        let decoder = JSONDecoder()
+        var scenarios = catalog.scenarios
+        for index in scenarios.indices {
+            let defaultMapFile = "Maps/\(scenarios[index].id).map.json"
+            let explicitMapFile = scenarios[index].mapFile?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let mapFile = explicitMapFile?.isEmpty == false ? explicitMapFile! : defaultMapFile
+            let mapURL = resourceURL(for: mapFile, relativeTo: baseURL)
+            do {
+                let data = try Data(contentsOf: mapURL)
+                let decodedMap = try decoder.decode(ScenarioMapFile.self, from: data)
+                scenarios[index].map = try decodedMap.materializedMap(expectedScenarioID: scenarios[index].id)
+                scenarios[index].mapFile = mapFile
+            } catch {
+                throw ScenarioCatalogError.mapLoadFailed("\(scenarios[index].id): \(error)")
+            }
+        }
+        return ZombieScenarioCatalog(schemaVersion: catalog.schemaVersion, scenarios: scenarios)
+    }
+
+    private static func resourceURL(for mapFile: String, relativeTo baseURL: URL) -> URL {
+        let nestedURL = baseURL.appendingPathComponent(mapFile)
+        if FileManager.default.fileExists(atPath: nestedURL.path) {
+            return nestedURL
+        }
+        return baseURL.appendingPathComponent(URL(fileURLWithPath: mapFile).lastPathComponent)
     }
 }
 

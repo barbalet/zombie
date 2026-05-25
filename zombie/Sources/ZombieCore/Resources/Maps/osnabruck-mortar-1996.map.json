@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "osnabruck-mortar-1996",
+  "width": 12,
+  "height": 8,
+  "cellYards": 20,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "-": [
+      "lane"
+    ],
+    "c": [
+      "cover"
+    ],
+    "p": [
+      "protected"
+    ],
+    "0": [
+      "building",
+      "base",
+      "objective"
+    ]
+  },
+  "rows": [
+    "############",
+    "#..........#",
+    "#..........#",
+    "#c.c.c.c...#",
+    "#=======0=.#",
+    "#c-c.cpc...#",
+    "#..........#",
+    "############"
+  ],
+  "protectedCells": [
+    {
+      "x": 6,
+      "y": 5
+    }
+  ],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
+  },
+  "notes": "Out-of-region base attack retained only as deferred source-review content. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+}
