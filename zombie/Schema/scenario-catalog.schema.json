@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/zombie/scenario-catalog.schema.json",
+  "title": "zombie scenario catalog",
+  "type": "object",
+  "required": ["schemaVersion", "scenarios"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/scenario" }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "object",
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["title", "wikipedia", "accessed", "confidence", "notes"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "wikipedia": { "type": "string", "format": "uri" },
+        "accessed": { "type": "string" },
+        "confidence": { "type": "string", "minLength": 1 },
+        "notes": { "type": "string" }
+      }
+    },
+    "force": {
+      "type": "object",
+      "required": ["id", "name", "side", "unit", "sourceNote"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "side": { "enum": ["player", "opponent"] },
+        "unit": { "type": "string" },
+        "sourceNote": { "type": "string" }
+      }
+    },
+    "actor": {
+      "type": "object",
+      "required": ["id", "name", "side", "role", "position", "weapon", "stats", "skills", "sourceNote"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "side": { "enum": ["player", "opponent"] },
+        "role": { "type": "string" },
+        "position": { "$ref": "#/$defs/point" },
+        "weapon": { "type": "string" },
+        "stats": { "type": "object" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "sourceNote": { "type": "string" }
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "required": ["schemaVersion", "id", "title", "date", "place", "tier", "playable", "forces", "actors", "map", "objective", "mechanics", "source", "sensitivityTags", "implementationNotes"],
+      "properties": {
+        "schemaVersion": { "type": "integer", "const": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "minLength": 10 },
+        "place": { "type": "string", "minLength": 1 },
+        "tier": { "enum": ["early", "vehicle", "checkpoint", "aircraft", "deferred", "excluded"] },
+        "playable": { "type": "boolean" },
+        "forces": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/force" } },
+        "actors": { "type": "array", "items": { "$ref": "#/$defs/actor" } },
+        "source": { "$ref": "#/$defs/source" }
+      }
+    }
+  }
+}

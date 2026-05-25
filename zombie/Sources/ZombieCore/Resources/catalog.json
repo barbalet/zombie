@@ -1,0 +1,770 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    {
+      "schemaVersion": 1,
+      "id": "drummuckavall-1975",
+      "title": "Drummuckavall Ambush",
+      "date": "1975-11-22",
+      "place": "Drummuckavall, County Armagh",
+      "tier": "early",
+      "playable": true,
+      "forces": [
+        { "id": "ira-south-armagh", "name": "Provisional IRA", "side": "player", "unit": "South Armagh Brigade", "sourceNote": "Wikipedia identifies the IRA unit as South Armagh Brigade." },
+        { "id": "british-op", "name": "British Army", "side": "opponent", "unit": "Royal Regiment of Fusiliers observation post", "sourceNote": "Wikipedia describes an infantry section in an observation post." }
+      ],
+      "actors": [
+        { "id": "ira-rifle-1", "name": "IRA Rifle Team", "side": "player", "role": "rifleman", "position": { "x": 2, "y": 3 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced", "evade", "in_cover"], "sourceNote": "Armed attackers abstracted as a rifle team." },
+        { "id": "ira-gunner-1", "name": "IRA Support Gunner", "side": "player", "role": "gunner", "position": { "x": 2, "y": 5 }, "weapon": "machine_gun", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Support fire abstracted from reported heavy gunfire." },
+        { "id": "army-sentry-1", "name": "Observation Sentry", "side": "opponent", "role": "sentry", "position": { "x": 10, "y": 4 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "British observation post defender." },
+        { "id": "army-section-1", "name": "Fusilier Section", "side": "opponent", "role": "rifleman", "position": { "x": 11, "y": 5 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 4, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Remaining infantry section abstracted into one actor." }
+      ],
+      "map": {
+        "width": 14,
+        "height": 9,
+        "cellYards": 8,
+        "cells": [
+          { "point": { "x": 1, "y": 3 }, "tags": ["border"] },
+          { "point": { "x": 2, "y": 3 }, "tags": ["hedge", "cover"] },
+          { "point": { "x": 2, "y": 5 }, "tags": ["hedge", "cover"] },
+          { "point": { "x": 10, "y": 4 }, "tags": ["elevation", "objective"] },
+          { "point": { "x": 11, "y": 5 }, "tags": ["elevation"] },
+          { "point": { "x": 6, "y": 4 }, "tags": ["river"] },
+          { "point": { "x": 7, "y": 4 }, "tags": ["river"] }
+        ],
+        "protectedCells": [],
+        "notes": "Observation post, border edge, stream, and concealed firing positions are abstracted."
+      },
+      "objective": { "kind": "withdrawal", "point": { "x": 10, "y": 4 }, "description": "The IRA side tries to suppress the observation post and withdraw; the British side tries to hold the post.", "turnLimit": 10 },
+      "mechanics": { "vehicles": [], "explosives": [], "checkpoints": [], "phases": ["approach", "contact", "withdrawal"] },
+      "source": { "title": "Drummuckavall ambush", "wikipedia": "https://en.wikipedia.org/wiki/Drummuckavall_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded"],
+      "implementationNotes": "Early infantry scenario for observation-post, cover, and withdrawal mechanics."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "glasdrumman-1981",
+      "title": "Glasdrumman Ambush",
+      "date": "1981-07-17",
+      "place": "Glasdrumman, County Armagh",
+      "tier": "early",
+      "playable": true,
+      "forces": [
+        { "id": "ira-south-armagh", "name": "Provisional IRA", "side": "player", "unit": "South Armagh Brigade", "sourceNote": "Wikipedia describes an IRA ambush of a British close observation team." },
+        { "id": "british-cop", "name": "British Army", "side": "opponent", "unit": "Royal Green Jackets close observation platoon", "sourceNote": "Wikipedia describes concealed British positions around a scrapyard." }
+      ],
+      "actors": [
+        { "id": "ira-m60", "name": "IRA Gun Team", "side": "player", "role": "gunner", "position": { "x": 1, "y": 4 }, "weapon": "machine_gun", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Machine-gun fire abstracted as a support gunner." },
+        { "id": "ira-scout", "name": "IRA Scout", "side": "player", "role": "scout", "position": { "x": 2, "y": 6 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 6, "AP": 5, "PH": 6, "ME": 6 }, "skills": ["evade", "firearm_basic"], "sourceNote": "Scout represents reconnaissance of the concealed position." },
+        { "id": "rgj-team", "name": "Bravo Team", "side": "opponent", "role": "rifleman", "position": { "x": 11, "y": 4 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic", "in_cover"], "sourceNote": "Concealed British team abstracted as one actor." },
+        { "id": "rgj-support", "name": "Blocking Team", "side": "opponent", "role": "support", "position": { "x": 10, "y": 6 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 4, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Additional observation position." }
+      ],
+      "map": {
+        "width": 14,
+        "height": 10,
+        "cellYards": 8,
+        "cells": [
+          { "point": { "x": 1, "y": 4 }, "tags": ["elevation", "cover"] },
+          { "point": { "x": 2, "y": 6 }, "tags": ["hedge", "cover"] },
+          { "point": { "x": 6, "y": 5 }, "tags": ["road"] },
+          { "point": { "x": 7, "y": 5 }, "tags": ["road"] },
+          { "point": { "x": 8, "y": 5 }, "tags": ["road"] },
+          { "point": { "x": 11, "y": 4 }, "tags": ["cover", "objective"] },
+          { "point": { "x": 10, "y": 6 }, "tags": ["cover"] }
+        ],
+        "protectedCells": [],
+        "notes": "Scrapyard, road, and concealed positions are abstracted."
+      },
+      "objective": { "kind": "counter_ambush", "point": { "x": 11, "y": 4 }, "description": "The IRA side attempts to defeat the observation position; the British side attempts to survive and hold.", "turnLimit": 10 },
+      "mechanics": { "vehicles": [], "explosives": [], "checkpoints": [], "phases": ["surveillance", "contact", "withdrawal"] },
+      "source": { "title": "Glasdrumman ambush", "wikipedia": "https://en.wikipedia.org/wiki/Glasdrumman_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded"],
+      "implementationNotes": "Early infantry scenario focused on hidden teams, terrain, and counter-ambush play."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "kesh-1984",
+      "title": "Kesh Ambush",
+      "date": "1984-12-02",
+      "place": "Kesh, County Fermanagh",
+      "tier": "early",
+      "playable": true,
+      "forces": [
+        { "id": "ira-asu", "name": "Provisional IRA", "side": "player", "unit": "Active service unit", "sourceNote": "Wikipedia describes a four-person IRA unit." },
+        { "id": "sas-team", "name": "British Army", "side": "opponent", "unit": "Special Air Service", "sourceNote": "Wikipedia describes an SAS team ambushing the unit." }
+      ],
+      "actors": [
+        { "id": "ira-lead", "name": "IRA Lead Volunteer", "side": "player", "role": "commander", "position": { "x": 3, "y": 3 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 6, "ME": 7 }, "skills": ["firearm_advanced", "evade"], "sourceNote": "Unit leader abstraction." },
+        { "id": "ira-support", "name": "IRA Support Volunteer", "side": "player", "role": "support", "position": { "x": 3, "y": 5 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 5, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Support member abstraction." },
+        { "id": "sas-lead", "name": "SAS Ambush Lead", "side": "opponent", "role": "commander", "position": { "x": 10, "y": 3 }, "weapon": "rifle", "stats": { "RE": 7, "IR": 6, "AP": 6, "PH": 7, "ME": 7 }, "skills": ["firearm_advanced", "evade", "in_cover"], "sourceNote": "SAS firing position abstraction." },
+        { "id": "sas-cover", "name": "SAS Cover", "side": "opponent", "role": "rifleman", "position": { "x": 10, "y": 6 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "SAS cover position abstraction." }
+      ],
+      "map": {
+        "width": 14,
+        "height": 9,
+        "cellYards": 6,
+        "cells": [
+          { "point": { "x": 3, "y": 3 }, "tags": ["road"] },
+          { "point": { "x": 3, "y": 5 }, "tags": ["road"] },
+          { "point": { "x": 6, "y": 4 }, "tags": ["building", "protected"] },
+          { "point": { "x": 7, "y": 4 }, "tags": ["building", "protected"] },
+          { "point": { "x": 10, "y": 3 }, "tags": ["cover"] },
+          { "point": { "x": 10, "y": 6 }, "tags": ["cover"] },
+          { "point": { "x": 12, "y": 6 }, "tags": ["river", "exit"] }
+        ],
+        "protectedCells": [{ "x": 6, "y": 4 }, { "x": 7, "y": 4 }],
+        "notes": "Restaurant/civilian area is protected and cannot be targeted."
+      },
+      "objective": { "kind": "break_contact", "point": { "x": 12, "y": 6 }, "description": "The IRA side attempts to break contact; the SAS side attempts to stop the unit.", "turnLimit": 10 },
+      "mechanics": { "vehicles": [], "explosives": [], "checkpoints": [], "phases": ["lure", "contact", "break_contact"] },
+      "source": { "title": "Kesh ambush", "wikipedia": "https://en.wikipedia.org/wiki/Kesh_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded", "protected-zone"],
+      "implementationNotes": "Restaurant/civilian area is represented only as protected terrain."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "strabane-1985",
+      "title": "Strabane Ambush",
+      "date": "1985-02-23",
+      "place": "Strabane, County Tyrone",
+      "tier": "early",
+      "playable": true,
+      "forces": [
+        { "id": "ira-west-tyrone", "name": "Provisional IRA", "side": "player", "unit": "West Tyrone Brigade", "sourceNote": "Wikipedia identifies a three-person IRA unit." },
+        { "id": "sas-strabane", "name": "British Army", "side": "opponent", "unit": "Special Air Service", "sourceNote": "Wikipedia identifies eight SAS soldiers." }
+      ],
+      "actors": [
+        { "id": "ira-strabane-a", "name": "IRA Volunteer A", "side": "player", "role": "rifleman", "position": { "x": 2, "y": 3 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 5, "PH": 6, "ME": 5 }, "skills": ["firearm_basic", "evade"], "sourceNote": "IRA unit member." },
+        { "id": "ira-strabane-b", "name": "IRA Volunteer B", "side": "player", "role": "rifleman", "position": { "x": 2, "y": 5 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 5, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "IRA unit member." },
+        { "id": "sas-strabane-a", "name": "SAS Position A", "side": "opponent", "role": "rifleman", "position": { "x": 9, "y": 3 }, "weapon": "rifle", "stats": { "RE": 7, "IR": 6, "AP": 6, "PH": 7, "ME": 7 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "SAS ambush position." },
+        { "id": "sas-strabane-b", "name": "SAS Position B", "side": "opponent", "role": "support", "position": { "x": 10, "y": 5 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 6, "AP": 5, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "SAS support position." }
+      ],
+      "map": { "width": 13, "height": 9, "cellYards": 6, "cells": [
+        { "point": { "x": 2, "y": 3 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 5 }, "tags": ["road"] },
+        { "point": { "x": 5, "y": 4 }, "tags": ["building", "protected"] },
+        { "point": { "x": 9, "y": 3 }, "tags": ["cover"] },
+        { "point": { "x": 10, "y": 5 }, "tags": ["cover"] }
+      ], "protectedCells": [{ "x": 5, "y": 4 }], "notes": "Town features are abstracted with protected noncombat cells." },
+      "objective": { "kind": "survive", "point": { "x": 0, "y": 4 }, "description": "The IRA side attempts to exit the ambush zone; the SAS side attempts to prevent escape.", "turnLimit": 9 },
+      "mechanics": { "vehicles": [], "explosives": [], "checkpoints": [], "phases": ["approach", "ambush", "exit"] },
+      "source": { "title": "Strabane ambush", "wikipedia": "https://en.wikipedia.org/wiki/Strabane_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded", "protected-zone"],
+      "implementationNotes": "Small-force ambush tuned for deterministic regression and early demo use."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "drumnakilly-1988",
+      "title": "Ambush at Drumnakilly",
+      "date": "1988-08-30",
+      "place": "Drumnakilly, County Tyrone",
+      "tier": "early",
+      "playable": true,
+      "forces": [
+        { "id": "ira-east-tyrone", "name": "Provisional IRA", "side": "player", "unit": "East Tyrone Brigade", "sourceNote": "Wikipedia identifies a three-person active service unit." },
+        { "id": "sas-drumnakilly", "name": "British Army", "side": "opponent", "unit": "Special Air Service", "sourceNote": "Wikipedia describes concealed SAS positions." }
+      ],
+      "actors": [
+        { "id": "ira-drumnakilly-car", "name": "IRA Car Team", "side": "player", "role": "rifleman", "position": { "x": 3, "y": 4 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 6, "ME": 6 }, "skills": ["firearm_advanced"], "sourceNote": "Armed unit abstracted after vehicle arrival." },
+        { "id": "ira-drumnakilly-support", "name": "IRA Rear Guard", "side": "player", "role": "support", "position": { "x": 3, "y": 5 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 5, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Rear guard abstraction." },
+        { "id": "sas-drumnakilly-a", "name": "SAS Roadside A", "side": "opponent", "role": "rifleman", "position": { "x": 9, "y": 3 }, "weapon": "rifle", "stats": { "RE": 7, "IR": 6, "AP": 6, "PH": 7, "ME": 7 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Roadside ambush position." },
+        { "id": "sas-drumnakilly-b", "name": "SAS Roadside B", "side": "opponent", "role": "rifleman", "position": { "x": 9, "y": 6 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 6, "AP": 5, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Roadside ambush position." }
+      ],
+      "map": { "width": 13, "height": 10, "cellYards": 6, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 9, "y": 3 }, "tags": ["hedge", "cover"] },
+        { "point": { "x": 9, "y": 6 }, "tags": ["hedge", "cover"] },
+        { "point": { "x": 11, "y": 4 }, "tags": ["objective"] }
+      ], "protectedCells": [], "notes": "Road approach and hedgerow positions are abstracted." },
+      "objective": { "kind": "break_contact", "point": { "x": 0, "y": 4 }, "description": "The IRA side attempts to reverse out of the ambush; the SAS side attempts to hold fire lanes.", "turnLimit": 9 },
+      "mechanics": { "vehicles": [], "explosives": [], "checkpoints": [], "phases": ["vehicle_approach", "ambush", "break_contact"] },
+      "source": { "title": "Ambush at Drumnakilly", "wikipedia": "https://en.wikipedia.org/wiki/Ambush_at_Drumnakilly", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded"],
+      "implementationNotes": "Vehicle approach is abstracted in the early infantry tier; full vehicle damage waits for vehicle scenarios."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "operation-conservation-1990",
+      "title": "Operation Conservation",
+      "date": "1990-05-06",
+      "place": "Cullyhanna, County Armagh",
+      "tier": "early",
+      "playable": true,
+      "forces": [
+        { "id": "ira-south-armagh", "name": "Provisional IRA", "side": "player", "unit": "South Armagh Brigade", "sourceNote": "Wikipedia describes an IRA counter-ambush of a British position." },
+        { "id": "scots-guards", "name": "British Army", "side": "opponent", "unit": "2nd Battalion Scots Guards", "sourceNote": "Wikipedia identifies concealed British sections." }
+      ],
+      "actors": [
+        { "id": "ira-gpmg-a", "name": "IRA GPMG Team A", "side": "player", "role": "gunner", "position": { "x": 2, "y": 3 }, "weapon": "machine_gun", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Machine-gun team abstraction." },
+        { "id": "ira-cover-g3", "name": "IRA Cover Rifle", "side": "player", "role": "support", "position": { "x": 2, "y": 6 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 5, "PH": 6, "ME": 5 }, "skills": ["firearm_basic", "evade"], "sourceNote": "Cover fire abstraction." },
+        { "id": "guards-op", "name": "Scots Guards OP", "side": "opponent", "role": "sentry", "position": { "x": 10, "y": 4 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic", "in_cover"], "sourceNote": "Exposed observation post abstraction." },
+        { "id": "guards-support", "name": "Scots Guards Support", "side": "opponent", "role": "rifleman", "position": { "x": 11, "y": 5 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Support position abstraction." }
+      ],
+      "map": { "width": 14, "height": 10, "cellYards": 8, "cells": [
+        { "point": { "x": 2, "y": 3 }, "tags": ["elevation", "cover"] },
+        { "point": { "x": 2, "y": 6 }, "tags": ["cover"] },
+        { "point": { "x": 7, "y": 4 }, "tags": ["building"] },
+        { "point": { "x": 10, "y": 4 }, "tags": ["cover", "objective"] },
+        { "point": { "x": 11, "y": 5 }, "tags": ["cover"] },
+        { "point": { "x": 12, "y": 8 }, "tags": ["exit"] }
+      ], "protectedCells": [], "notes": "Dorsey/Cullyhanna terrain is represented as high ground, derelict building, and exposed OP." },
+      "objective": { "kind": "counter_ambush", "point": { "x": 10, "y": 4 }, "description": "The IRA side attempts to overwhelm the exposed OP and withdraw; the British side attempts to survive.", "turnLimit": 10 },
+      "mechanics": { "vehicles": [], "explosives": [], "checkpoints": [], "phases": ["bait", "counter_ambush", "withdrawal"] },
+      "source": { "title": "Operation Conservation", "wikipedia": "https://en.wikipedia.org/wiki/Operation_Conservation", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded"],
+      "implementationNotes": "Early scenario exercises counter-ambush and terrain advantage."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "coagh-1991",
+      "title": "Coagh Ambush",
+      "date": "1991-06-03",
+      "place": "Coagh, County Tyrone",
+      "tier": "early",
+      "playable": true,
+      "forces": [
+        { "id": "ira-east-tyrone", "name": "Provisional IRA", "side": "player", "unit": "East Tyrone Brigade", "sourceNote": "Wikipedia identifies an East Tyrone IRA active service unit." },
+        { "id": "sas-coagh", "name": "British Army", "side": "opponent", "unit": "Special Air Service", "sourceNote": "Wikipedia identifies SAS soldiers in the ambush." }
+      ],
+      "actors": [
+        { "id": "ira-coagh-car", "name": "IRA Car Team", "side": "player", "role": "rifleman", "position": { "x": 3, "y": 4 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 6, "ME": 6 }, "skills": ["firearm_advanced"], "sourceNote": "Vehicle occupants abstracted as a combat team." },
+        { "id": "ira-coagh-cover", "name": "IRA Cover Actor", "side": "player", "role": "support", "position": { "x": 3, "y": 5 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 5, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Additional armed actor abstraction." },
+        { "id": "sas-coagh-a", "name": "SAS Cover Group", "side": "opponent", "role": "rifleman", "position": { "x": 9, "y": 3 }, "weapon": "rifle", "stats": { "RE": 7, "IR": 6, "AP": 6, "PH": 7, "ME": 7 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Cover group abstraction." },
+        { "id": "sas-coagh-b", "name": "SAS Arrest Group", "side": "opponent", "role": "rifleman", "position": { "x": 9, "y": 6 }, "weapon": "rifle", "stats": { "RE": 7, "IR": 6, "AP": 5, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Arrest group abstraction." }
+      ],
+      "map": { "width": 13, "height": 9, "cellYards": 6, "cells": [
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 5 }, "tags": ["road"] },
+        { "point": { "x": 6, "y": 4 }, "tags": ["building", "protected"] },
+        { "point": { "x": 9, "y": 3 }, "tags": ["cover"] },
+        { "point": { "x": 9, "y": 6 }, "tags": ["cover"] },
+        { "point": { "x": 11, "y": 4 }, "tags": ["objective"] }
+      ], "protectedCells": [{ "x": 6, "y": 4 }], "notes": "Village civilian space is protected and not targetable." },
+      "objective": { "kind": "survive", "point": { "x": 0, "y": 4 }, "description": "The IRA side attempts to exit; the SAS side attempts to stop the unit.", "turnLimit": 9 },
+      "mechanics": { "vehicles": [], "explosives": [], "checkpoints": [], "phases": ["approach", "ambush", "exit"] },
+      "source": { "title": "Coagh ambush", "wikipedia": "https://en.wikipedia.org/wiki/Coagh_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded", "protected-zone"],
+      "implementationNotes": "Sensitive small-force scenario with protected village cells."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "clonoe-1992",
+      "title": "Clonoe Ambush",
+      "date": "1992-02-16",
+      "place": "Clonoe, County Tyrone",
+      "tier": "early",
+      "playable": true,
+      "forces": [
+        { "id": "ira-east-tyrone", "name": "Provisional IRA", "side": "player", "unit": "East Tyrone Brigade", "sourceNote": "Wikipedia identifies an IRA unit returning from an attack." },
+        { "id": "sas-clonoe", "name": "British Army", "side": "opponent", "unit": "Special Air Service", "sourceNote": "Wikipedia identifies SAS soldiers at the ambush site." }
+      ],
+      "actors": [
+        { "id": "ira-dshk-team", "name": "IRA Heavy Gun Team", "side": "player", "role": "gunner", "position": { "x": 3, "y": 4 }, "weapon": "heavy_machine_gun", "stats": { "RE": 6, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["firearm_advanced"], "sourceNote": "Heavy machine gun is abstracted as an infantry support actor." },
+        { "id": "ira-getaway", "name": "IRA Getaway Actor", "side": "player", "role": "driver", "position": { "x": 3, "y": 5 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 5, "PH": 6, "ME": 5 }, "skills": ["evade", "firearm_basic"], "sourceNote": "Getaway driver actor abstraction." },
+        { "id": "sas-hedge-a", "name": "SAS Hedge Position A", "side": "opponent", "role": "rifleman", "position": { "x": 9, "y": 3 }, "weapon": "rifle", "stats": { "RE": 7, "IR": 6, "AP": 6, "PH": 7, "ME": 7 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "SAS hedgerow position." },
+        { "id": "sas-hedge-b", "name": "SAS Hedge Position B", "side": "opponent", "role": "rifleman", "position": { "x": 9, "y": 6 }, "weapon": "rifle", "stats": { "RE": 7, "IR": 6, "AP": 5, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "SAS hedgerow position." }
+      ],
+      "map": { "width": 13, "height": 10, "cellYards": 6, "cells": [
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 5 }, "tags": ["road"] },
+        { "point": { "x": 5, "y": 5 }, "tags": ["building", "protected"] },
+        { "point": { "x": 9, "y": 3 }, "tags": ["hedge", "cover"] },
+        { "point": { "x": 9, "y": 6 }, "tags": ["hedge", "cover"] },
+        { "point": { "x": 11, "y": 4 }, "tags": ["objective"] }
+      ], "protectedCells": [{ "x": 5, "y": 5 }], "notes": "Church and civilian surroundings are protected noncombat terrain." },
+      "objective": { "kind": "break_contact", "point": { "x": 0, "y": 4 }, "description": "The IRA side attempts to leave the car park; the SAS side attempts to stop the unit.", "turnLimit": 9 },
+      "mechanics": { "vehicles": [], "explosives": [], "checkpoints": [], "phases": ["arrival", "ambush", "break_contact"] },
+      "source": { "title": "Clonoe ambush", "wikipedia": "https://en.wikipedia.org/wiki/Clonoe_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded", "protected-zone", "contested"],
+      "implementationNotes": "Legal and historical contestation is surfaced as metadata; gameplay uses neutral force and terrain abstractions."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "dungiven-1972",
+      "title": "Dungiven Landmine and Gun Attack",
+      "date": "1972-06-24",
+      "place": "Crabarkey near Dungiven, County Londonderry",
+      "tier": "vehicle",
+      "playable": true,
+      "forces": [
+        { "id": "ira-dungiven", "name": "Provisional IRA", "side": "player", "unit": "Active service unit", "sourceNote": "Wikipedia describes IRA volunteers firing after a landmine." },
+        { "id": "army-convoy", "name": "British Army", "side": "opponent", "unit": "Army convoy", "sourceNote": "Wikipedia describes a convoy with Land Rover and lorry." }
+      ],
+      "actors": [
+        { "id": "ira-trigger", "name": "IRA Trigger Team", "side": "player", "role": "support", "position": { "x": 2, "y": 5 }, "weapon": "explosive", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["evade", "in_cover"], "sourceNote": "Command detonation abstracted." },
+        { "id": "ira-fire", "name": "IRA Fire Team", "side": "player", "role": "rifleman", "position": { "x": 2, "y": 3 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 5, "PH": 6, "ME": 5 }, "skills": ["firearm_basic", "in_cover"], "sourceNote": "Follow-up fire abstracted." },
+        { "id": "convoy-escort", "name": "Convoy Escort", "side": "opponent", "role": "driver", "position": { "x": 9, "y": 4 }, "weapon": "rifle", "stats": { "RE": 4, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Convoy occupants abstracted." }
+      ],
+      "map": { "width": 14, "height": 9, "cellYards": 10, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 4, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 5, "y": 4 }, "tags": ["road", "objective"] },
+        { "point": { "x": 2, "y": 3 }, "tags": ["cover"] },
+        { "point": { "x": 2, "y": 5 }, "tags": ["cover"] }
+      ], "protectedCells": [], "notes": "A6 road and roadside firing positions are abstracted." },
+      "objective": { "kind": "convoy_interdiction", "point": { "x": 5, "y": 4 }, "description": "The IRA side attempts to stop the convoy; the British side attempts to pass through the route.", "turnLimit": 7 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "convoy-landrover", "side": "opponent", "label": "Land Rover Escort", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }, { "x": 6, "y": 4 }], "armor": 1, "passengers": ["convoy-escort"], "sourceNote": "Convoy movement abstracted from article." }
+        ],
+        "explosives": [
+          { "id": "road-mine", "label": "Command Mine", "point": { "x": 4, "y": 4 }, "radius": 0, "trigger": "route", "abstractEffect": "lead vehicle disabled and convoy fire disrupted", "sourceNote": "Explosive is represented as abstract route interdiction." }
+        ],
+        "checkpoints": [],
+        "phases": ["convoy", "blast", "follow_up_fire"]
+      },
+      "source": { "title": "Dungiven landmine and gun attack", "wikipedia": "https://en.wikipedia.org/wiki/Dungiven_landmine_and_gun_attack", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded"],
+      "implementationNotes": "Cycle 71-80 vehicle-route and explosive abstraction scenario."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "dungannon-1979",
+      "title": "Dungannon Land Mine Attack",
+      "date": "1979-12-16",
+      "place": "Near Dungannon, County Tyrone",
+      "tier": "vehicle",
+      "playable": true,
+      "forces": [
+        { "id": "ira-east-tyrone", "name": "Provisional IRA", "side": "player", "unit": "East Tyrone Brigade", "sourceNote": "Wikipedia identifies the East Tyrone Brigade." },
+        { "id": "royal-artillery-patrol", "name": "British Army", "side": "opponent", "unit": "16th Regiment Royal Artillery mobile patrol", "sourceNote": "Wikipedia describes a mobile patrol." }
+      ],
+      "actors": [
+        { "id": "ira-dungannon-trigger", "name": "IRA Trigger Team", "side": "player", "role": "support", "position": { "x": 2, "y": 5 }, "weapon": "explosive", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["evade", "in_cover"], "sourceNote": "Remote trigger abstraction." },
+        { "id": "patrol-crew", "name": "Mobile Patrol Crew", "side": "opponent", "role": "driver", "position": { "x": 8, "y": 4 }, "weapon": "rifle", "stats": { "RE": 4, "IR": 4, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Patrol occupants abstracted." }
+      ],
+      "map": { "width": 13, "height": 9, "cellYards": 10, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 4, "y": 4 }, "tags": ["road", "objective"] },
+        { "point": { "x": 2, "y": 5 }, "tags": ["cover"] }
+      ], "protectedCells": [], "notes": "Ballygawley Road segment abstracted as a route." },
+      "objective": { "kind": "route_survival", "point": { "x": 4, "y": 4 }, "description": "The patrol attempts to pass through; the IRA side attempts route interdiction.", "turnLimit": 6 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "landrover-patrol", "side": "opponent", "label": "Land Rover Patrol", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }], "armor": 1, "passengers": ["patrol-crew"], "sourceNote": "Two Land Rovers represented by one route actor." }
+        ],
+        "explosives": [
+          { "id": "culvert-mine", "label": "Culvert Mine", "point": { "x": 3, "y": 4 }, "radius": 0, "trigger": "route", "abstractEffect": "patrol vehicle destroyed", "sourceNote": "Blast represented only as route outcome." }
+        ],
+        "checkpoints": [],
+        "phases": ["patrol", "trigger", "rescue"]
+      },
+      "source": { "title": "Dungannon land mine attack", "wikipedia": "https://en.wikipedia.org/wiki/Dungannon_land_mine_attack", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded"],
+      "implementationNotes": "Vehicle alpha mine-trigger scenario."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "altnaveigh-1981",
+      "title": "Altnaveigh Landmine Attack",
+      "date": "1981-05-19",
+      "place": "Altnaveigh, County Armagh",
+      "tier": "vehicle",
+      "playable": true,
+      "forces": [
+        { "id": "ira-south-armagh", "name": "Provisional IRA", "side": "player", "unit": "South Armagh Brigade", "sourceNote": "Wikipedia identifies the South Armagh Brigade." },
+        { "id": "royal-green-jackets", "name": "British Army", "side": "opponent", "unit": "Royal Green Jackets vehicle patrol", "sourceNote": "Wikipedia describes two Saracen armoured vehicles." }
+      ],
+      "actors": [
+        { "id": "ira-altnaveigh-trigger", "name": "IRA Trigger Team", "side": "player", "role": "support", "position": { "x": 2, "y": 5 }, "weapon": "explosive", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["evade", "in_cover"], "sourceNote": "Remote trigger abstraction." },
+        { "id": "saracen-crew", "name": "Saracen Crew", "side": "opponent", "role": "driver", "position": { "x": 8, "y": 4 }, "weapon": "rifle", "stats": { "RE": 4, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Armoured vehicle occupants abstracted." }
+      ],
+      "map": { "width": 13, "height": 9, "cellYards": 10, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 4, "y": 4 }, "tags": ["road", "objective"] },
+        { "point": { "x": 5, "y": 4 }, "tags": ["rail"] },
+        { "point": { "x": 2, "y": 5 }, "tags": ["cover"] }
+      ], "protectedCells": [], "notes": "Road and rail edge abstracted for route and blast effects." },
+      "objective": { "kind": "route_survival", "point": { "x": 4, "y": 4 }, "description": "The armoured patrol attempts to pass; the IRA side attempts route interdiction.", "turnLimit": 6 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "saracen-patrol", "side": "opponent", "label": "Saracen Patrol", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }], "armor": 3, "passengers": ["saracen-crew"], "sourceNote": "Two Saracens represented by one armoured route." }
+        ],
+        "explosives": [
+          { "id": "large-landmine", "label": "Large Landmine", "point": { "x": 3, "y": 4 }, "radius": 1, "trigger": "route", "abstractEffect": "armoured vehicle disabled", "sourceNote": "Explosion represented abstractly." }
+        ],
+        "checkpoints": [],
+        "phases": ["patrol", "blast", "search"]
+      },
+      "source": { "title": "Altnaveigh landmine attack", "wikipedia": "https://en.wikipedia.org/wiki/Altnaveigh_landmine_attack", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded"],
+      "implementationNotes": "Armoured route scenario for vehicle cycle 81."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "ballygawley-landmine-1983",
+      "title": "Ballygawley Land Mine Attack",
+      "date": "1983-07-13",
+      "place": "Near Ballygawley, County Tyrone",
+      "tier": "vehicle",
+      "playable": true,
+      "forces": [
+        { "id": "ira-east-tyrone", "name": "Provisional IRA", "side": "player", "unit": "East Tyrone Brigade", "sourceNote": "Wikipedia identifies IRA in the Ballygawley area." },
+        { "id": "udr-convoy", "name": "British Army", "side": "opponent", "unit": "Ulster Defence Regiment convoy", "sourceNote": "Wikipedia describes UDR armoured vehicles." }
+      ],
+      "actors": [
+        { "id": "ira-ballygawley-trigger", "name": "IRA Trigger Team", "side": "player", "role": "support", "position": { "x": 2, "y": 5 }, "weapon": "explosive", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["evade", "in_cover"], "sourceNote": "Remote trigger abstraction." },
+        { "id": "udr-crew", "name": "UDR Convoy Crew", "side": "opponent", "role": "driver", "position": { "x": 8, "y": 4 }, "weapon": "rifle", "stats": { "RE": 4, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Convoy occupants abstracted." }
+      ],
+      "map": { "width": 13, "height": 9, "cellYards": 10, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 4, "y": 4 }, "tags": ["road", "objective"] },
+        { "point": { "x": 2, "y": 5 }, "tags": ["cover"] }
+      ], "protectedCells": [], "notes": "Ballymacilroy Hill route abstracted." },
+      "objective": { "kind": "route_survival", "point": { "x": 4, "y": 4 }, "description": "The convoy attempts to pass through; the IRA side attempts interdiction.", "turnLimit": 6 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "udr-convoy-route", "side": "opponent", "label": "UDR Convoy", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }], "armor": 2, "passengers": ["udr-crew"], "sourceNote": "Convoy route abstraction." }
+        ],
+        "explosives": [
+          { "id": "culvert-mine", "label": "Culvert Mine", "point": { "x": 3, "y": 4 }, "radius": 0, "trigger": "route", "abstractEffect": "rear vehicle disabled", "sourceNote": "Remote landmine abstraction." }
+        ],
+        "checkpoints": [],
+        "phases": ["convoy", "trigger", "aftermath"]
+      },
+      "source": { "title": "Ballygawley land mine attack", "wikipedia": "https://en.wikipedia.org/wiki/Ballygawley_land_mine_attack", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded"],
+      "implementationNotes": "Convoy mine regression case for cycle 82."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "mullacreevie-1991",
+      "title": "Mullacreevie Ambush",
+      "date": "1991-03-01",
+      "place": "Mullacreevie, Armagh City",
+      "tier": "vehicle",
+      "playable": true,
+      "forces": [
+        { "id": "ira-north-armagh", "name": "Provisional IRA", "side": "player", "unit": "North Armagh Brigade", "sourceNote": "Wikipedia identifies the North Armagh Brigade." },
+        { "id": "udr-mobile", "name": "British Army", "side": "opponent", "unit": "Ulster Defence Regiment mobile patrol", "sourceNote": "Wikipedia describes a two-Land-Rover UDR patrol." }
+      ],
+      "actors": [
+        { "id": "ira-horizontal-mortar", "name": "IRA Horizontal Mortar Team", "side": "player", "role": "support", "position": { "x": 2, "y": 5 }, "weapon": "mortar", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["evade", "in_cover"], "sourceNote": "Horizontal mortar abstracted as directional explosive." },
+        { "id": "udr-mobile-crew", "name": "UDR Mobile Patrol Crew", "side": "opponent", "role": "driver", "position": { "x": 8, "y": 4 }, "weapon": "rifle", "stats": { "RE": 4, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Patrol crew abstraction." }
+      ],
+      "map": { "width": 13, "height": 9, "cellYards": 8, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 4, "y": 4 }, "tags": ["road", "objective"] },
+        { "point": { "x": 2, "y": 5 }, "tags": ["cover"] },
+        { "point": { "x": 6, "y": 6 }, "tags": ["building", "protected"] }
+      ], "protectedCells": [{ "x": 6, "y": 6 }], "notes": "Housing estate edge is protected from targeting." },
+      "objective": { "kind": "route_survival", "point": { "x": 4, "y": 4 }, "description": "The patrol attempts to pass; the IRA side attempts directional interdiction.", "turnLimit": 6 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "udr-landrovers", "side": "opponent", "label": "UDR Land Rovers", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }], "armor": 1, "passengers": ["udr-mobile-crew"], "sourceNote": "Two Land Rovers represented by one route." }
+        ],
+        "explosives": [
+          { "id": "horizontal-mortar", "label": "Horizontal Mortar", "point": { "x": 3, "y": 4 }, "radius": 1, "trigger": "directional-route", "abstractEffect": "lead patrol vehicle knocked out", "sourceNote": "Directional explosive is abstracted without operational detail." }
+        ],
+        "checkpoints": [],
+        "phases": ["patrol", "directional_trigger", "rescue"]
+      },
+      "source": { "title": "Mullacreevie ambush", "wikipedia": "https://en.wikipedia.org/wiki/Mullacreevie_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded", "protected-zone"],
+      "implementationNotes": "Horizontal mortar is abstracted as a directional route hazard."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "derryard-1989",
+      "title": "Attack on Derryard Checkpoint",
+      "date": "1989-12-13",
+      "place": "Derryard near Rosslea, County Fermanagh",
+      "tier": "checkpoint",
+      "playable": true,
+      "forces": [
+        { "id": "ira-column", "name": "Provisional IRA", "side": "player", "unit": "Flying column", "sourceNote": "Wikipedia describes an IRA column using an improvised armoured vehicle." },
+        { "id": "kosb-checkpoint", "name": "British Army and RUC", "side": "opponent", "unit": "King's Own Scottish Borderers checkpoint", "sourceNote": "Wikipedia describes the checkpoint garrison and RUC presence." }
+      ],
+      "actors": [
+        { "id": "ira-armoured-truck-team", "name": "IRA Armoured Truck Team", "side": "player", "role": "gunner", "position": { "x": 2, "y": 5 }, "weapon": "heavy_machine_gun", "stats": { "RE": 6, "IR": 5, "AP": 4, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced"], "sourceNote": "Truck weapons abstracted as support actor." },
+        { "id": "checkpoint-defender", "name": "Checkpoint Defender", "side": "opponent", "role": "sentry", "position": { "x": 8, "y": 5 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic", "in_cover"], "sourceNote": "Garrison defender abstraction." }
+      ],
+      "map": { "width": 13, "height": 10, "cellYards": 8, "cells": [
+        { "point": { "x": 1, "y": 5 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 5 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 5 }, "tags": ["road"] },
+        { "point": { "x": 7, "y": 4 }, "tags": ["checkpoint", "cover"] },
+        { "point": { "x": 8, "y": 5 }, "tags": ["checkpoint", "objective"] },
+        { "point": { "x": 9, "y": 5 }, "tags": ["base", "cover"] },
+        { "point": { "x": 11, "y": 5 }, "tags": ["border", "exit"] }
+      ], "protectedCells": [], "notes": "Permanent vehicle checkpoint is abstracted as structures and alarm zone." },
+      "objective": { "kind": "checkpoint_assault", "point": { "x": 8, "y": 5 }, "description": "The IRA side attempts to breach the checkpoint; the garrison attempts to survive and hold.", "turnLimit": 8 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "armoured-dumper", "side": "player", "label": "Improvised Armoured Vehicle", "path": [{ "x": 0, "y": 5 }, { "x": 1, "y": 5 }, { "x": 2, "y": 5 }, { "x": 3, "y": 5 }, { "x": 4, "y": 5 }, { "x": 5, "y": 5 }, { "x": 6, "y": 5 }, { "x": 7, "y": 5 }], "armor": 3, "passengers": ["ira-armoured-truck-team"], "sourceNote": "Improvised armoured truck route abstraction." }
+        ],
+        "explosives": [
+          { "id": "van-bomb", "label": "Abstract Van Bomb", "point": { "x": 8, "y": 5 }, "radius": 1, "trigger": "phase", "abstractEffect": "checkpoint damage check", "sourceNote": "Bombing attempt abstracted as phase outcome." }
+        ],
+        "checkpoints": [
+          { "id": "derryard-pvcp", "label": "Derryard Checkpoint", "point": { "x": 8, "y": 5 }, "armor": 3, "alarmTurn": 2, "sourceNote": "Checkpoint complex abstraction." }
+        ],
+        "phases": ["approach", "breach", "withdrawal"]
+      },
+      "source": { "title": "Attack on Derryard checkpoint", "wikipedia": "https://en.wikipedia.org/wiki/Attack_on_Derryard_checkpoint", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded"],
+      "implementationNotes": "Checkpoint beta scenario using route, structures, phases, and abstract blast effects."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "cloghoge-1992",
+      "title": "Attack on Cloghoge Checkpoint",
+      "date": "1992-05-01",
+      "place": "Cloghoge near Newry, County Armagh",
+      "tier": "checkpoint",
+      "playable": true,
+      "forces": [
+        { "id": "ira-south-armagh", "name": "Provisional IRA", "side": "player", "unit": "South Armagh Brigade", "sourceNote": "Wikipedia identifies South Armagh Brigade." },
+        { "id": "fusiliers-checkpoint", "name": "British Army", "side": "opponent", "unit": "Royal Regiment of Fusiliers checkpoint", "sourceNote": "Wikipedia describes the checkpoint garrison." }
+      ],
+      "actors": [
+        { "id": "ira-rail-team", "name": "IRA Rail Route Team", "side": "player", "role": "support", "position": { "x": 2, "y": 4 }, "weapon": "explosive", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["evade"], "sourceNote": "Railway bomb team abstraction." },
+        { "id": "checkpoint-fusilier", "name": "Checkpoint Sentry", "side": "opponent", "role": "sentry", "position": { "x": 9, "y": 4 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic", "in_cover"], "sourceNote": "Sentry abstraction." }
+      ],
+      "map": { "width": 14, "height": 9, "cellYards": 10, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["rail"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["rail"] },
+        { "point": { "x": 3, "y": 4 }, "tags": ["rail"] },
+        { "point": { "x": 4, "y": 4 }, "tags": ["rail"] },
+        { "point": { "x": 8, "y": 4 }, "tags": ["checkpoint"] },
+        { "point": { "x": 9, "y": 4 }, "tags": ["checkpoint", "objective"] },
+        { "point": { "x": 10, "y": 4 }, "tags": ["base", "cover"] }
+      ], "protectedCells": [], "notes": "Rail alignment and checkpoint are abstracted." },
+      "objective": { "kind": "checkpoint_damage", "point": { "x": 9, "y": 4 }, "description": "The IRA side attempts to damage the checkpoint; the garrison attempts to survive.", "turnLimit": 8 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "rail-van", "side": "player", "label": "Rail Van", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }, { "x": 6, "y": 4 }, { "x": 7, "y": 4 }, { "x": 8, "y": 4 }], "armor": 1, "passengers": [], "sourceNote": "Rail-mounted van bomb abstracted as a vehicle route." }
+        ],
+        "explosives": [
+          { "id": "rail-bomb", "label": "Railway Bomb", "point": { "x": 8, "y": 4 }, "radius": 1, "trigger": "route", "abstractEffect": "checkpoint destroyed check", "sourceNote": "Blast abstracted as checkpoint damage." }
+        ],
+        "checkpoints": [
+          { "id": "cloghoge-pvcp", "label": "Cloghoge Checkpoint", "point": { "x": 9, "y": 4 }, "armor": 3, "alarmTurn": 2, "sourceNote": "Permanent checkpoint abstraction." }
+        ],
+        "phases": ["rail_route", "warning", "blast"]
+      },
+      "source": { "title": "Attack on Cloghoge checkpoint", "wikipedia": "https://en.wikipedia.org/wiki/Attack_on_Cloghoge_checkpoint", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded"],
+      "implementationNotes": "Rail vehicle and checkpoint damage abstraction for cycle 89-90."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "glenanne-1991",
+      "title": "Glenanne Barracks Bombing",
+      "date": "1991-05-31",
+      "place": "Glenanne near Mountnorris, County Armagh",
+      "tier": "checkpoint",
+      "playable": true,
+      "forces": [
+        { "id": "ira-glenanne", "name": "Provisional IRA", "side": "player", "unit": "Unspecified IRA unit", "sourceNote": "Wikipedia identifies the Provisional IRA as perpetrator." },
+        { "id": "udr-glenanne", "name": "British Army", "side": "opponent", "unit": "Ulster Defence Regiment barracks", "sourceNote": "Wikipedia describes a UDR base." }
+      ],
+      "actors": [
+        { "id": "ira-truck-team", "name": "IRA Truck Team", "side": "player", "role": "driver", "position": { "x": 2, "y": 4 }, "weapon": "explosive", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["evade"], "sourceNote": "Driverless truck operation abstracted." },
+        { "id": "udr-sentry", "name": "UDR Sentry", "side": "opponent", "role": "sentry", "position": { "x": 8, "y": 4 }, "weapon": "rifle", "stats": { "RE": 4, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Base sentry abstraction." }
+      ],
+      "map": { "width": 13, "height": 9, "cellYards": 10, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 5, "y": 4 }, "tags": ["base"] },
+        { "point": { "x": 6, "y": 4 }, "tags": ["base", "objective"] },
+        { "point": { "x": 8, "y": 4 }, "tags": ["base", "cover"] },
+        { "point": { "x": 4, "y": 6 }, "tags": ["building", "protected"] }
+      ], "protectedCells": [{ "x": 4, "y": 6 }], "notes": "Nearby civilian property is protected and noncombat." },
+      "objective": { "kind": "base_damage", "point": { "x": 6, "y": 4 }, "description": "The IRA side attempts to damage the barracks; the base attempts alarm and survival.", "turnLimit": 7 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "driverless-truck", "side": "player", "label": "Driverless Truck", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }, { "x": 6, "y": 4 }], "armor": 1, "passengers": [], "sourceNote": "Driverless lorry abstracted as route." }
+        ],
+        "explosives": [
+          { "id": "truck-bomb", "label": "Truck Bomb", "point": { "x": 6, "y": 4 }, "radius": 1, "trigger": "route", "abstractEffect": "barracks damage check", "sourceNote": "Blast abstracted." }
+        ],
+        "checkpoints": [
+          { "id": "glenanne-barracks", "label": "Glenanne Barracks", "point": { "x": 6, "y": 4 }, "armor": 3, "alarmTurn": 2, "sourceNote": "Base abstraction." }
+        ],
+        "phases": ["alarm", "route", "base_damage"]
+      },
+      "source": { "title": "Glenanne barracks bombing", "wikipedia": "https://en.wikipedia.org/wiki/Glenanne_barracks_bombing", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded", "protected-zone"],
+      "implementationNotes": "Barracks and protected nearby civilian space are handled as abstract structures."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "loughgall-1987",
+      "title": "Loughgall Ambush",
+      "date": "1987-05-08",
+      "place": "Loughgall, County Armagh",
+      "tier": "checkpoint",
+      "playable": true,
+      "forces": [
+        { "id": "ira-east-tyrone", "name": "Provisional IRA", "side": "player", "unit": "East Tyrone Brigade", "sourceNote": "Wikipedia identifies the East Tyrone Brigade attack unit." },
+        { "id": "sas-ruc-loughgall", "name": "British Army and RUC", "side": "opponent", "unit": "SAS and RUC at Loughgall station", "sourceNote": "Wikipedia describes SAS and RUC positions." }
+      ],
+      "actors": [
+        { "id": "ira-van-team", "name": "IRA Van Team", "side": "player", "role": "rifleman", "position": { "x": 3, "y": 5 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 7, "ME": 6 }, "skills": ["firearm_advanced"], "sourceNote": "Assault party abstracted." },
+        { "id": "ira-digger", "name": "IRA Digger Driver", "side": "player", "role": "driver", "position": { "x": 2, "y": 4 }, "weapon": "explosive", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["evade"], "sourceNote": "Digger-bomb movement abstracted." },
+        { "id": "sas-loughgall-a", "name": "SAS Hidden Position", "side": "opponent", "role": "rifleman", "position": { "x": 9, "y": 3 }, "weapon": "rifle", "stats": { "RE": 7, "IR": 6, "AP": 6, "PH": 7, "ME": 7 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Hidden position abstraction." },
+        { "id": "ruc-station", "name": "RUC Station Defender", "side": "opponent", "role": "sentry", "position": { "x": 8, "y": 5 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic", "in_cover"], "sourceNote": "Station defender abstraction." }
+      ],
+      "map": { "width": 14, "height": 10, "cellYards": 8, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 5 }, "tags": ["road"] },
+        { "point": { "x": 7, "y": 5 }, "tags": ["checkpoint"] },
+        { "point": { "x": 8, "y": 5 }, "tags": ["base", "objective"] },
+        { "point": { "x": 9, "y": 3 }, "tags": ["cover"] },
+        { "point": { "x": 11, "y": 6 }, "tags": ["protected"] }
+      ], "protectedCells": [{ "x": 11, "y": 6 }], "notes": "Civilian route is protected and cannot be targeted." },
+      "objective": { "kind": "base_attack", "point": { "x": 8, "y": 5 }, "description": "The IRA side attempts a base attack; the SAS/RUC side attempts to stop the assault.", "turnLimit": 8 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "digger-bomb", "side": "player", "label": "Digger Bomb", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }, { "x": 6, "y": 5 }, { "x": 7, "y": 5 }], "armor": 2, "passengers": ["ira-digger"], "sourceNote": "Digger with bomb abstracted as route." }
+        ],
+        "explosives": [
+          { "id": "bucket-bomb", "label": "Bucket Bomb", "point": { "x": 7, "y": 5 }, "radius": 1, "trigger": "route", "abstractEffect": "station damage check", "sourceNote": "Blast abstracted." }
+        ],
+        "checkpoints": [
+          { "id": "loughgall-station", "label": "Loughgall RUC Station", "point": { "x": 8, "y": 5 }, "armor": 3, "alarmTurn": 1, "sourceNote": "Station/base abstraction." }
+        ],
+        "phases": ["approach", "base_attack", "ambush"]
+      },
+      "source": { "title": "Loughgall ambush", "wikipedia": "https://en.wikipedia.org/wiki/Loughgall_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded", "protected-zone", "civilian-risk", "contested"],
+      "implementationNotes": "Civilian risk is represented as protected cells and never as playable actors."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "warrenpoint-1979",
+      "title": "Warrenpoint Ambush",
+      "date": "1979-08-27",
+      "place": "Narrow Water near Warrenpoint, County Down",
+      "tier": "vehicle",
+      "playable": true,
+      "forces": [
+        { "id": "ira-south-armagh", "name": "Provisional IRA", "side": "player", "unit": "South Armagh Brigade", "sourceNote": "Wikipedia identifies South Armagh Brigade." },
+        { "id": "parachute-regiment", "name": "British Army", "side": "opponent", "unit": "Convoy and reinforcement elements", "sourceNote": "Wikipedia describes British Army convoy and reinforcements." }
+      ],
+      "actors": [
+        { "id": "ira-warrenpoint-trigger-a", "name": "IRA First Trigger Team", "side": "player", "role": "support", "position": { "x": 2, "y": 5 }, "weapon": "explosive", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["evade", "in_cover"], "sourceNote": "First blast team abstraction." },
+        { "id": "ira-warrenpoint-trigger-b", "name": "IRA Second Trigger Team", "side": "player", "role": "support", "position": { "x": 8, "y": 2 }, "weapon": "explosive", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 6 }, "skills": ["evade", "in_cover"], "sourceNote": "Second blast team abstraction." },
+        { "id": "convoy-team", "name": "British Convoy Team", "side": "opponent", "role": "driver", "position": { "x": 5, "y": 4 }, "weapon": "rifle", "stats": { "RE": 4, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Convoy soldiers abstracted." }
+      ],
+      "map": { "width": 14, "height": 9, "cellYards": 12, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 4, "y": 4 }, "tags": ["road", "objective"] },
+        { "point": { "x": 8, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 9, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 0, "y": 6 }, "tags": ["river", "border"] },
+        { "point": { "x": 6, "y": 6 }, "tags": ["protected"] }
+      ], "protectedCells": [{ "x": 6, "y": 6 }], "notes": "River/border and civilian risk are abstracted as protected terrain and no-fire cells." },
+      "objective": { "kind": "staged_convoy_interdiction", "point": { "x": 4, "y": 4 }, "description": "The IRA side attempts staged convoy interdiction; the British side attempts to pass and recover.", "turnLimit": 9 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "convoy-first", "side": "opponent", "label": "First Convoy Element", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }], "armor": 1, "passengers": ["convoy-team"], "sourceNote": "First convoy element route." },
+          { "id": "reinforcement-element", "side": "opponent", "label": "Reinforcement Element", "path": [{ "x": 7, "y": 4 }, { "x": 8, "y": 4 }, { "x": 9, "y": 4 }, { "x": 10, "y": 4 }], "armor": 1, "passengers": [], "sourceNote": "Reinforcement route abstraction." }
+        ],
+        "explosives": [
+          { "id": "first-roadside-bomb", "label": "First Roadside Bomb", "point": { "x": 4, "y": 4 }, "radius": 1, "trigger": "route", "abstractEffect": "first convoy element disabled", "sourceNote": "First blast abstraction." },
+          { "id": "second-roadside-bomb", "label": "Second Roadside Bomb", "point": { "x": 9, "y": 4 }, "radius": 1, "trigger": "route", "abstractEffect": "reinforcement element disrupted", "sourceNote": "Second blast abstraction." }
+        ],
+        "checkpoints": [],
+        "phases": ["first_convoy", "reinforcement", "withdrawal"]
+      },
+      "source": { "title": "Warrenpoint ambush", "wikipedia": "https://en.wikipedia.org/wiki/Warrenpoint_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded", "protected-zone", "civilian-risk"],
+      "implementationNotes": "Civilian casualties in the historical event are not simulated; protected cells prevent civilian targeting."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "fivemiletown-1993",
+      "title": "1993 Fivemiletown Ambush",
+      "date": "1993-12-12",
+      "place": "Fivemiletown, County Tyrone",
+      "tier": "vehicle",
+      "playable": true,
+      "forces": [
+        { "id": "ira-east-tyrone", "name": "Provisional IRA", "side": "player", "unit": "East Tyrone Brigade", "sourceNote": "Wikipedia identifies East Tyrone Brigade active service units." },
+        { "id": "ruc-patrol", "name": "RUC and British Army follow-up", "side": "opponent", "unit": "RUC mobile patrol and helicopter response", "sourceNote": "Wikipedia describes RUC patrol and British Army helicopter follow-up." }
+      ],
+      "actors": [
+        { "id": "ira-fivemiletown-a", "name": "IRA Ambush Team A", "side": "player", "role": "rifleman", "position": { "x": 3, "y": 3 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 6, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Ambush team abstraction." },
+        { "id": "ruc-car", "name": "RUC Patrol Car", "side": "opponent", "role": "driver", "position": { "x": 8, "y": 4 }, "weapon": "rifle", "stats": { "RE": 4, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Patrol car crew abstraction." }
+      ],
+      "map": { "width": 13, "height": 9, "cellYards": 8, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 4, "y": 4 }, "tags": ["road", "objective"] },
+        { "point": { "x": 3, "y": 3 }, "tags": ["building", "cover"] },
+        { "point": { "x": 7, "y": 5 }, "tags": ["protected"] }
+      ], "protectedCells": [{ "x": 7, "y": 5 }], "notes": "Main street route and protected civilian space are abstracted." },
+      "objective": { "kind": "patrol_ambush", "point": { "x": 4, "y": 4 }, "description": "The IRA side attempts to ambush a patrol route; the security-force side attempts to pass and trigger follow-up.", "turnLimit": 7 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "ruc-patrol-car", "side": "opponent", "label": "RUC Patrol Car", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }], "armor": 1, "passengers": ["ruc-car"], "sourceNote": "Patrol car route abstraction." }
+        ],
+        "explosives": [],
+        "checkpoints": [
+          { "id": "follow-up-zone", "label": "Helicopter Follow-Up Zone", "point": { "x": 8, "y": 4 }, "armor": 1, "alarmTurn": 5, "sourceNote": "Follow-up operation abstracted as an alarm zone." }
+        ],
+        "phases": ["patrol", "ambush", "follow_up"]
+      },
+      "source": { "title": "1993 Fivemiletown ambush", "wikipedia": "https://en.wikipedia.org/wiki/1993_Fivemiletown_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded", "protected-zone"],
+      "implementationNotes": "RUC scenario retained as optional security-force scope; civilian cells are protected."
+    },
+    {
+      "schemaVersion": 1,
+      "id": "killeeshil-1994",
+      "title": "Killeeshil Ambush",
+      "date": "1994-07-15",
+      "place": "Killeeshil, County Tyrone",
+      "tier": "vehicle",
+      "playable": true,
+      "forces": [
+        { "id": "ira-east-tyrone", "name": "Provisional IRA", "side": "player", "unit": "East Tyrone Brigade", "sourceNote": "Wikipedia identifies an East Tyrone Brigade active service unit." },
+        { "id": "ruc-mobile-patrol", "name": "RUC", "side": "opponent", "unit": "Mobile patrol", "sourceNote": "Wikipedia describes an RUC mobile patrol." }
+      ],
+      "actors": [
+        { "id": "ira-tipper-team", "name": "IRA Tipper Team", "side": "player", "role": "gunner", "position": { "x": 3, "y": 3 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 6, "ME": 6 }, "skills": ["firearm_advanced", "in_cover"], "sourceNote": "Tipper lorry firing team abstraction." },
+        { "id": "ruc-cavalier", "name": "RUC Patrol Vehicle", "side": "opponent", "role": "driver", "position": { "x": 8, "y": 4 }, "weapon": "rifle", "stats": { "RE": 4, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Patrol vehicle crew abstraction." }
+      ],
+      "map": { "width": 13, "height": 9, "cellYards": 8, "cells": [
+        { "point": { "x": 1, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 2, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 3, "y": 4 }, "tags": ["road"] },
+        { "point": { "x": 4, "y": 4 }, "tags": ["road", "objective"] },
+        { "point": { "x": 3, "y": 3 }, "tags": ["cover"] },
+        { "point": { "x": 5, "y": 5 }, "tags": ["protected"] },
+        { "point": { "x": 6, "y": 5 }, "tags": ["protected"] }
+      ], "protectedCells": [{ "x": 5, "y": 5 }, { "x": 6, "y": 5 }], "notes": "Civilian traffic is protected and not simulated as actors." },
+      "objective": { "kind": "patrol_ambush", "point": { "x": 4, "y": 4 }, "description": "The IRA side attempts to disable a patrol route; the RUC side attempts to pass through.", "turnLimit": 7 },
+      "mechanics": {
+        "vehicles": [
+          { "id": "ruc-car-route", "side": "opponent", "label": "RUC Patrol Car", "path": [{ "x": 0, "y": 4 }, { "x": 1, "y": 4 }, { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }], "armor": 1, "passengers": ["ruc-cavalier"], "sourceNote": "RUC car route abstraction." },
+          { "id": "ira-tipper-route", "side": "player", "label": "Tipper Lorry", "path": [{ "x": 2, "y": 3 }, { "x": 3, "y": 3 }, { "x": 4, "y": 3 }], "armor": 1, "passengers": ["ira-tipper-team"], "sourceNote": "Tipper lorry attack platform abstraction." }
+        ],
+        "explosives": [],
+        "checkpoints": [],
+        "phases": ["patrol", "intercept", "withdrawal"]
+      },
+      "source": { "title": "Killeeshil ambush", "wikipedia": "https://en.wikipedia.org/wiki/Killeeshil_ambush", "accessed": "2026-05-25", "confidence": "medium", "notes": "First-pass Wikipedia scenario abstraction." },
+      "sensitivityTags": ["two-force", "bounded", "protected-zone", "civilian-risk"],
+      "implementationNotes": "Civilian injuries in the historical event are handled as protected no-target cells."
+    }
+  ]
+}

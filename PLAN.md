@@ -49,6 +49,25 @@ Testing is not a final hardening pass. It is part of every phase:
 | QA and Packaging Beta | 146-175 | Xcode schemes, CI scripts, UI automation, packaged app, and performance checks are stable. |
 | Release Candidate | 176-200 | Content lock, regression lock, accessibility, docs, packaging, and demo release are complete. |
 
+## Execution Status
+
+Cycles 1-100 have been run into an executable prototype baseline:
+
+- Added SwiftPM targets for `ZombieCore`, `ZombieApp`, `ZombieRegression`, and the local Field of Chaos C engine.
+- Added `zombie.xcodeproj` with a shared `Zombie` Mac Catalyst scheme and Xcode bridging header for the C engine.
+- Added a bundled JSON catalog with 20 playable Wikipedia-backed two-force scenarios across early infantry, vehicle, and checkpoint tiers.
+- Added typed scenario models, catalog validation, Field of Chaos actor conversion, deterministic infantry simulation, and abstract vehicle/checkpoint simulation.
+- Added a SwiftUI scenario browser, tactical grid preview, force/actor panels, source link, mechanics summary, and event log preview.
+- Added unit, UI smoke, and regression coverage for catalog validity, Wikipedia links, engine adapter wiring, deterministic simulation, protected-zone handling, vehicle/checkpoint events, and app launch/run-preview flow.
+- Added scripts under `zombie/Scripts/` and implementation notes under `zombie/docs/cycles-001-100-execution.md`.
+
+Verified gates for cycles 1-100:
+
+- `swift test`
+- `swift run ZombieRegression`
+- `xcodebuild -project zombie.xcodeproj -scheme Zombie -configuration Debug -destination 'platform=macOS,variant=Mac Catalyst' build`
+- `git diff --check`
+
 ## 200 Cycle Map
 
 | Cycle | Focus | Deliverable | Test Gate |
