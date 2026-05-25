@@ -905,7 +905,7 @@
       "date": "1985-02-28",
       "place": "Newry, County Down",
       "tier": "mortar",
-      "playable": false,
+      "playable": true,
       "forces": [
         { "id": "ira-newry", "name": "Provisional IRA", "side": "player", "unit": "South Armagh Brigade and Newry unit", "sourceNote": "Wikipedia attributes the attack to the IRA." },
         { "id": "ruc-newry", "name": "RUC", "side": "opponent", "unit": "Newry police station", "sourceNote": "Wikipedia describes the RUC station target." }
@@ -918,7 +918,7 @@
         { "point": { "x": 8, "y": 4 }, "tags": ["base", "objective"] },
         { "point": { "x": 7, "y": 4 }, "tags": ["building"] },
         { "point": { "x": 5, "y": 5 }, "tags": ["protected"] }
-      ], "protectedCells": [{ "x": 5, "y": 5 }], "notes": "Police station and surrounding civilian area are abstracted; this remains non-playable review content." },
+      ], "protectedCells": [{ "x": 5, "y": 5 }], "notes": "Police station and surrounding civilian area are abstracted for high-level Play Mode." },
       "objective": { "kind": "deferred_indirect_fire", "point": { "x": 8, "y": 4 }, "description": "Deferred scenario used to test indirect-fire warnings, structures, and sensitivity rules.", "turnLimit": 5 },
       "mechanics": {
         "vehicles": [],
@@ -929,16 +929,16 @@
           { "id": "newry-mortar-salvo", "side": "player", "label": "Abstract Mortar Salvo", "setupTurn": 1, "warningTurn": 2, "impactTurn": 3, "target": { "x": 8, "y": 4 }, "scatter": [{ "x": 8, "y": 4 }, { "x": 7, "y": 4 }], "radius": 1, "abstractEffect": "station structure damage check", "sourceNote": "Salvo is represented only as a timed abstract event." }
         ],
         "structures": [
-          { "id": "newry-ruc-station", "label": "Newry RUC Station", "point": { "x": 8, "y": 4 }, "armor": 2, "health": 3, "sourceNote": "Station abstraction for non-playable testing." }
+          { "id": "newry-ruc-station", "label": "Newry RUC Station", "point": { "x": 8, "y": 4 }, "armor": 2, "health": 3, "sourceNote": "Station abstraction for high-level Play Mode testing." }
         ],
         "phases": ["setup", "warning", "impact", "aftermath"]
       },
-      "source": { "title": "1985 Newry mortar attack", "wikipedia": "https://en.wikipedia.org/wiki/1985_Newry_mortar_attack", "accessed": "2026-05-25", "confidence": "medium", "notes": "Deferred because the event is not a bounded playable skirmish." },
+      "source": { "title": "1985 Newry mortar attack", "wikipedia": "https://en.wikipedia.org/wiki/1985_Newry_mortar_attack", "accessed": "2026-05-25", "confidence": "medium", "notes": "Playable only as high-level indirect-fire abstraction." },
       "dataConfidence": { "roster": "medium", "map": "low", "weapons": "medium", "timing": "medium" },
-      "scopeWarning": "Deferred indirect-fire content for testing only; it cannot be launched as an ordinary playable battle.",
+      "scopeWarning": "Indirect-fire content is playable only as abstract setup, warning, impact, and damage-state timing; no operational weapon details are represented.",
       "collections": ["deferred-review", "mortar-abstraction"],
       "sensitivityTags": ["deferred", "protected-zone", "civilian-risk", "indirect-fire"],
-      "implementationNotes": "Cycle 109 deferred mortar scenario retained for validation and UI review, not ordinary play."
+      "implementationNotes": "Indirect-fire scenario retained with abstract Play Mode guardrails."
     },
     {
       "schemaVersion": 1,
@@ -947,7 +947,7 @@
       "date": "1996-06-28",
       "place": "Osnabrück, Germany",
       "tier": "deferred",
-      "playable": false,
+      "playable": true,
       "forces": [
         { "id": "ira-europe", "name": "Provisional IRA", "side": "player", "unit": "Mainland Europe unit", "sourceNote": "Wikipedia describes an IRA unit based in mainland Europe." },
         { "id": "british-garrison", "name": "British Army", "side": "opponent", "unit": "Quebec Barracks, Osnabrück Garrison", "sourceNote": "Wikipedia identifies the British Army barracks target." }
@@ -959,7 +959,7 @@
       "map": { "width": 12, "height": 8, "cellYards": 20, "cells": [
         { "point": { "x": 8, "y": 4 }, "tags": ["base", "objective"] },
         { "point": { "x": 6, "y": 5 }, "tags": ["protected"] }
-      ], "protectedCells": [{ "x": 6, "y": 5 }], "notes": "Out-of-region base attack retained only as deferred source-review content." },
+      ], "protectedCells": [{ "x": 6, "y": 5 }], "notes": "Out-of-region base attack retained as high-level abstract Play Mode content." },
       "objective": { "kind": "out_of_region_review", "point": { "x": 8, "y": 4 }, "description": "Deferred scenario used to validate out-of-region handling and release filters.", "turnLimit": 4 },
       "mechanics": {
         "vehicles": [],
@@ -974,12 +974,12 @@
         ],
         "phases": ["source_review", "warning", "impact"]
       },
-      "source": { "title": "Osnabrück mortar attack", "wikipedia": "https://en.wikipedia.org/wiki/Osnabr%C3%BCck_mortar_attack", "accessed": "2026-05-25", "confidence": "medium", "notes": "Deferred because it is out-of-region for the main Troubles demo scope." },
+      "source": { "title": "Osnabrück mortar attack", "wikipedia": "https://en.wikipedia.org/wiki/Osnabr%C3%BCck_mortar_attack", "accessed": "2026-05-25", "confidence": "medium", "notes": "Out-of-region scenario playable only as high-level source-review abstraction." },
       "dataConfidence": { "roster": "medium", "map": "low", "weapons": "medium", "timing": "medium" },
-      "scopeWarning": "Out-of-region deferred content for release-filter and source-review validation only.",
+      "scopeWarning": "Out-of-region indirect-fire content is playable only as abstract setup, warning, impact, and damage-state timing.",
       "collections": ["deferred-review", "mortar-abstraction", "out-of-region"],
       "sensitivityTags": ["deferred", "out-of-region", "protected-zone", "indirect-fire"],
-      "implementationNotes": "Cycle 110 deferred out-of-region scenario; never launched as ordinary playable battle."
+      "implementationNotes": "Out-of-region scenario launches through the same abstract Play Mode guardrails as other indirect-fire content."
     }
   ]
 }

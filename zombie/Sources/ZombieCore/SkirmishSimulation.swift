@@ -47,7 +47,6 @@ public final class ZombieSkirmishSimulator {
     public func runCatalog(_ catalog: ZombieScenarioCatalog, includeDeferred: Bool = false) -> [RegressionResult] {
         catalog.scenarios
             .filter { $0.playable || includeDeferred }
-            .filter { includeDeferred || ($0.tier != .deferred && $0.tier != .excluded) }
             .map { run($0) }
     }
 

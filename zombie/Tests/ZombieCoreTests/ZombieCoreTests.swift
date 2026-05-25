@@ -139,16 +139,19 @@ final class ZombieCoreTests: XCTestCase {
         XCTAssertTrue(manifest.contains("generatedCycles=1-200"))
     }
 
-    func testDeferredContentIsNotOrdinaryPlayableScope() throws {
+    func testAllCatalogScenariosAreRegressionPlayable() throws {
         let catalog = try ScenarioCatalog.bundled()
         let regularResults = ZombieSkirmishSimulator().runCatalog(catalog)
         let deferredResults = ZombieSkirmishSimulator().runCatalog(catalog, includeDeferred: true)
-        let deferred = catalog.scenarios.filter { $0.tier == .deferred || !$0.playable }
+        let failures = regularResults.filter { !$0.passed }
 
-        XCTAssertFalse(deferred.isEmpty)
-        XCTAssertFalse(regularResults.contains { $0.scenarioID == "newry-mortar-1985" || $0.scenarioID == "osnabruck-mortar-1996" })
+        XCTAssertEqual(regularResults.count, catalog.scenarios.count)
+        XCTAssertEqual(deferredResults.count, catalog.scenarios.count)
+        XCTAssertTrue(failures.isEmpty, failures.map { "\($0.scenarioID): \($0.outcome)" }.joined(separator: "\n"))
+        XCTAssertTrue(regularResults.contains { $0.scenarioID == "newry-mortar-1985" })
+        XCTAssertTrue(regularResults.contains { $0.scenarioID == "osnabruck-mortar-1996" })
         XCTAssertTrue(deferredResults.contains { $0.scenarioID == "newry-mortar-1985" })
-        XCTAssertTrue(deferred.allSatisfy { !$0.scopeWarning.isEmpty })
+        XCTAssertTrue(catalog.scenarios.allSatisfy { !$0.scopeWarning.isEmpty })
     }
 
     func testVehicleAndCheckpointScenariosEmitRouteOrAlarmEvents() throws {
@@ -184,14 +187,13 @@ final class ZombieCoreTests: XCTestCase {
         XCTAssertEqual(state.turn, 2)
     }
 
-    func testReadyVehicleScenariosCompleteFromBothSidesAndNonReadyRemainPreviewOnly() throws {
+    func testVehicleScenariosCompleteFromBothSides() throws {
         let catalog = try ScenarioCatalog.bundled()
         let readyIDs = PlayableAbstractEngine.vehiclePlayableScenarioIDs
         let ready = catalog.scenarios.filter { readyIDs.contains($0.id) }
-        let nonReady = catalog.scenarios.filter { $0.tier == .vehicle && !readyIDs.contains($0.id) }
+        let vehicleIDs = Set(catalog.scenarios.filter { $0.tier == .vehicle }.map(\.id))
 
-        XCTAssertEqual(Set(ready.map(\.id)), readyIDs)
-        XCTAssertFalse(nonReady.isEmpty)
+        XCTAssertEqual(Set(ready.map(\.id)), vehicleIDs)
 
         for scenario in ready {
             for side in ForceSide.allCases {
@@ -200,11 +202,6 @@ final class ZombieCoreTests: XCTestCase {
                 XCTAssertNotNil(state.outcome, "\(scenario.id) \(side.rawValue)")
                 XCTAssertTrue(state.events.contains { $0.phase == "abstract-blast" || $0.phase == "outcome" }, scenario.id)
             }
-        }
-
-        for scenario in nonReady {
-            XCTAssertFalse(PlayableAbstractEngine.isPlayable(scenario), scenario.id)
-            XCTAssertThrowsError(try PlayableAbstractEngine.start(scenario, humanSide: .player), scenario.id)
         }
     }
 
@@ -249,44 +246,58 @@ final class ZombieCoreTests: XCTestCase {
         XCTAssertTrue(phases.contains("structure-damage"))
     }
 
-    func testAbstractReplayCorpusAndAdvancedPolicyKeepMortarPreviewOnly() throws {
+    func testAbstractReplayCorpusIncludesIndirectFireScenarios() throws {
         let catalog = try ScenarioCatalog.bundled()
         let replay = PlayableAbstractEngine.runReadyCorpusReplay(catalog)
         let failures = replay.filter { !$0.passed }
         let newryMortar = try XCTUnwrap(catalog.scenarios.first { $0.id == "newry-mortar-1985" })
+        let osnabruck = try XCTUnwrap(catalog.scenarios.first { $0.id == "osnabruck-mortar-1996" })
 
         XCTAssertEqual(replay.count, PlayableAbstractEngine.abstractPlayableScenarioIDs.count * ForceSide.allCases.count)
         XCTAssertTrue(failures.isEmpty, failures.map { "\($0.scenarioID) \($0.humanSide.rawValue): \($0.outcome)" }.joined(separator: "\n"))
-        XCTAssertFalse(PlayableAbstractEngine.isPlayable(newryMortar))
-        XCTAssertTrue(PlayableAbstractEngine.availability(newryMortar).contains("Preview Mode only"))
-        XCTAssertThrowsError(try PlayableAbstractEngine.start(newryMortar, humanSide: .player))
+        XCTAssertTrue(PlayableAbstractEngine.isPlayable(newryMortar))
+        XCTAssertTrue(PlayableAbstractEngine.isPlayable(osnabruck))
+        XCTAssertTrue(PlayableAbstractEngine.availability(newryMortar).contains("Abstract Play Mode available"))
+        XCTAssertEqual(try PlayableAbstractEngine.runSmokePlaythrough(newryMortar, humanSide: .player).outcome, "indirect fire resolved")
+        XCTAssertEqual(try PlayableAbstractEngine.runSmokePlaythrough(osnabruck, humanSide: .opponent).outcome, "indirect fire resolved")
     }
 
-    func testScenarioAvailabilityLabelsMatchCycle300ContentLock() throws {
+    func testScenarioAvailabilityLabelsMakeEveryCatalogScenarioPlayable() throws {
         let catalog = try ScenarioCatalog.bundled()
         let playableIDs = Set(catalog.scenarios.filter { ScenarioPlayAvailability.forScenario($0) == .playable }.map(\.id))
         let previewIDs = Set(catalog.scenarios.filter { ScenarioPlayAvailability.forScenario($0) == .preview }.map(\.id))
         let deferredIDs = Set(catalog.scenarios.filter { ScenarioPlayAvailability.forScenario($0) == .deferred }.map(\.id))
 
-        XCTAssertTrue(playableIDs.isSuperset(of: [
-            "play-mode-tutorial",
-            "drummuckavall-1975",
-            "glasdrumman-1981",
-            "dungiven-1972",
-            "derryard-1989",
-            "newry-road-1993",
-            "lynx-shootdown-1994"
-        ]))
-        XCTAssertTrue(previewIDs.isSuperset(of: [
-            "mullacreevie-1991",
-            "warrenpoint-1979",
-            "fivemiletown-1993",
-            "killeeshil-1994"
-        ]))
-        XCTAssertTrue(deferredIDs.isSuperset(of: [
-            "newry-mortar-1985",
-            "osnabruck-mortar-1996"
-        ]))
+        XCTAssertEqual(playableIDs, Set(catalog.scenarios.map(\.id)))
+        XCTAssertTrue(previewIDs.isEmpty)
+        XCTAssertTrue(deferredIDs.isEmpty)
+    }
+
+    func testPlayableGamesCollectionOnlyOffersStartableGamesFromBothSides() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let collection = try XCTUnwrap(ScenarioLibrary.collections(for: catalog).first { $0.id == ScenarioLibrary.playableCollectionID })
+        let playable = ScenarioLibrary.playableScenarios(in: catalog)
+        let playableIDs = Set(playable.map(\.id))
+
+        XCTAssertEqual(Set(collection.scenarioIDs), Set(catalog.scenarios.map(\.id)))
+        XCTAssertEqual(playableIDs, Set(catalog.scenarios.map(\.id)))
+        XCTAssertEqual(playableIDs.count, 25)
+        XCTAssertTrue(playableIDs.contains("play-mode-tutorial"))
+        XCTAssertTrue(playableIDs.contains("dungiven-1972"))
+        XCTAssertTrue(playableIDs.contains("newry-road-1993"))
+        XCTAssertTrue(playableIDs.contains("warrenpoint-1979"))
+        XCTAssertTrue(playableIDs.contains("newry-mortar-1985"))
+        XCTAssertTrue(playableIDs.contains("osnabruck-mortar-1996"))
+
+        for scenario in playable {
+            for side in ForceSide.allCases {
+                if scenario.tier == .early {
+                    XCTAssertNoThrow(try PlayableGameEngine.start(scenario, humanSide: side), "\(scenario.id) \(side.rawValue)")
+                } else {
+                    XCTAssertNoThrow(try PlayableAbstractEngine.start(scenario, humanSide: side), "\(scenario.id) \(side.rawValue)")
+                }
+            }
+        }
     }
 
     func testPlayableSaveSchemaMigrationAndCrashSafeRecovery() throws {

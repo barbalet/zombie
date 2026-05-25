@@ -315,7 +315,7 @@ By cycle 200:
 - All early infantry scenarios are playable.
 - Vehicle/checkpoint scenarios are playable where marked implemented.
 - Aircraft/mortar scenarios are playable only where their abstractions pass sensitivity review.
-- Excluded and deferred scenarios cannot be accidentally launched as ordinary playable battles.
+- Excluded and deferred scenarios require explicit abstract guardrails before they can be launched as playable battles.
 - Unit, regression, UI, screenshot, packaging, accessibility, and performance tests pass.
 - README and in-app source panels keep Wikipedia links and neutral historical notes visible.
 
@@ -345,18 +345,18 @@ Cycles 241-260 have been run into the first early-infantry manual beta:
 - Protected cells remain untargetable, no early side-run ends on turn 1, fog of war is explicitly deferred, actor status/turn order/log filters/replay seed/undo policy are visible in Play Mode, and tutorial completion is covered by UI smoke.
 - Execution notes are recorded in [zombie/docs/cycles-241-260-execution.md](zombie/docs/cycles-241-260-execution.md).
 
-Cycles 261-280 have been run into the first non-infantry abstract Play Mode:
+Cycles 261-280 have been run into the first non-infantry abstract Play Mode, then extended so every catalog scenario has a playable path:
 
-- Dungiven, Dungannon, Altnaveigh, Ballygawley, Derryard, Cloghoge, Glenanne, Loughgall, Battle of Newry Road, and the 1994 Lynx shootdown start from either side using abstract route, hold, react, and resolve commands.
+- All vehicle, checkpoint, aircraft, and indirect-fire/source-review scenarios start from either side using abstract route, hold, react, and resolve commands.
 - Route progress, hazards, checkpoint alarms, aircraft lane markers, warning markers, damage states, exits, and structure health are stepable without adding operational weapon procedures.
-- Warrenpoint, Mullacreevie, Fivemiletown, Killeeshil, mortar-only Newry, and deferred content remain Preview Mode only for later review.
 - Execution notes are recorded in [zombie/docs/cycles-261-280-execution.md](zombie/docs/cycles-261-280-execution.md).
 
 Cycles 281-300 have been run into the playable-game release baseline:
 
-- Browser/detail availability labels now distinguish Playable, Preview, Deferred, and Excluded content, and deferred/mortar-only scenarios cannot launch Play Mode.
+- Browser/detail availability labels now mark every catalog scenario as Playable unless a future scenario is explicitly Excluded.
+- The app opens on a `Playable Games` collection so the side-selectable game set is available immediately instead of being hidden inside the full research catalog.
 - Play Mode saves use a versioned schema with backup recovery, and manual logs can be copied as JSONL or human-readable summaries with scenario, side, seed, outcome, source, and scope warning.
-- Cycle-300 content is locked to all early infantry/tutorial scenarios plus the selected abstract vehicle/checkpoint/aircraft set; complex staged vehicle and mortar-only scenarios stay Preview/Deferred.
+- Play Mode now covers all 25 bundled scenarios: early infantry/tutorial plus abstract vehicle, checkpoint, aircraft, and indirect-fire/source-review scenarios.
 - Final playtest, QA, performance, storage, release notes, and package docs are updated, with execution notes in [zombie/docs/cycles-281-300-execution.md](zombie/docs/cycles-281-300-execution.md).
 
 | Cycle | Work | Goal | Acceptance |
@@ -441,7 +441,7 @@ Cycles 281-300 have been run into the playable-game release baseline:
 | 278 | Aircraft UI markers | Show lane, timing, and damage state in Play Mode. | Screenshot shows lane markers and turn timing. |
 | 279 | Newry Road play pass | Make Newry Road playable if policy allows. | Scenario finishes or remains preview-only. |
 | 280 | Lynx play pass | Make Lynx scenario playable if policy allows. | Scenario finishes or remains preview-only. |
-| 281 | Deferred guardrails | Keep deferred mortar review scenarios out of Play Mode. | UI cannot start deferred scenarios. |
+| 281 | Deferred guardrails | Keep source-review mortar scenarios abstract and safe in Play Mode. | UI starts deferred scenarios only through abstract controls. |
 | 282 | Scenario availability labels | Label Playable, Preview, Deferred, and Excluded clearly. | Browser labels match scenario state. |
 | 283 | Accessibility pass 1 | Check board focus, labels, controls, and dynamic text. | Accessibility smoke covers Play Mode. |
 | 284 | Performance pass 1 | Profile manual play on largest early maps. | Board input remains responsive. |
@@ -468,9 +468,9 @@ By cycle 300:
 
 - The app has distinct `Run Preview` and `Start Game` paths.
 - A user can pick either side before launching a playable scenario.
-- All 8 early infantry scenarios can be played from either side to a win/loss/draw outcome.
-- At least one non-infantry scenario tier is playable if its abstraction remains safe and understandable.
-- Deferred and excluded scenarios cannot be launched in Play Mode.
+- All bundled scenarios can be played from either side to an outcome.
+- Non-infantry scenarios remain high-level abstractions where detailed mechanics would be unsafe or unclear.
+- Future excluded scenarios cannot be launched in Play Mode.
 - The other side is controlled by deterministic AI with no protected-zone violations.
 - The player can select actors, move, attack, wait, end turns, save, resume, and export the event log.
 - The packaged Mac Catalyst app launches locally and passes unit, regression, UI, replay, and smoke checks.

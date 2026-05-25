@@ -36,9 +36,9 @@ Run this path for `Drummuckavall Ambush`, `Glasdrumman Ambush`, and `Kesh Ambush
 4. Confirm `Aircraft Markers` are visible.
 5. Press `Advance Route` or `React`, then `Resolve`.
 
-## Path E: Guardrails
+## Path E: Full Catalog Guardrails
 
-1. Search for `Warrenpoint` and confirm it is labelled `Preview`.
-2. Search for `1985 Newry Mortar Attack` and confirm it is labelled `Deferred`.
-3. Confirm `Start Game` is disabled for the deferred mortar scenario.
+1. Search for `Warrenpoint`, confirm it is labelled `Playable`, and start Abstract Play Mode.
+2. Search for `1985 Newry Mortar Attack`, confirm it is labelled `Playable`, and start Abstract Play Mode.
+3. Press `React`, then `Resolve`, and confirm indirect-fire setup/warning/impact events stay abstract.
 4. Open any civilian-risk scenario and confirm the scope warning remains visible.

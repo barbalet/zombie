@@ -24,13 +24,13 @@
 4. Use `Advance Route`, then `Resolve`.
 5. Point out the Playable label, abstract route state, high-level blast event, and JSONL export.
 
-## Preview-Only Vehicle Scenario
+## Staged Vehicle Scenario
 
 1. Search for `Warrenpoint`.
 2. Select `Warrenpoint Ambush`.
-3. Confirm it is labelled `Preview`.
-4. Press `Run Preview`.
-5. Point out route events, staged blasts, and protected-zone handling.
+3. Confirm it is labelled `Playable`.
+4. Press `Start Game`.
+5. Use an abstract command and point out route events, staged blasts, and protected-zone handling.
 
 ## Advanced Scenario
 
@@ -44,6 +44,6 @@
 
 1. Select the `Deferred Review` collection.
 2. Open `1985 Newry Mortar Attack` or `Osnabruck Mortar Attack`.
-3. Confirm the row is labelled `Deferred`.
-4. Confirm `Start Game` is disabled.
-5. Point out the scope warning and non-playable review status.
+3. Confirm the row is labelled `Playable`.
+4. Press `Start Game`.
+5. Use `React`, then `Resolve`, and point out the scope warning plus abstract setup/warning/impact events.

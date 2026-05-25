@@ -28,23 +28,33 @@ struct ZombieApp: App {
                 }
                 .keyboardShortcut("r", modifiers: [.command])
 
+                Button("Show Playable Games") {
+                    store.showPlayableGames()
+                }
+                .keyboardShortcut("0", modifiers: [.command])
+
+                Button("Show All Scenarios") {
+                    store.showAllScenarios()
+                }
+                .keyboardShortcut("9", modifiers: [.command])
+
                 Button("Show Early Scenarios") {
-                    store.selectedTier = .early
+                    store.showTier(.early)
                 }
                 .keyboardShortcut("1", modifiers: [.command])
 
                 Button("Show Vehicle Scenarios") {
-                    store.selectedTier = .vehicle
+                    store.showTier(.vehicle)
                 }
                 .keyboardShortcut("2", modifiers: [.command])
 
                 Button("Show Aircraft Scenarios") {
-                    store.selectedTier = .aircraft
+                    store.showTier(.aircraft)
                 }
                 .keyboardShortcut("3", modifiers: [.command])
 
                 Button("Show Mortar Scenarios") {
-                    store.selectedTier = .mortar
+                    store.showTier(.mortar)
                 }
                 .keyboardShortcut("4", modifiers: [.command])
             }
@@ -114,7 +124,7 @@ final class ZombieAppStore: ObservableObject {
     @Published var catalog = ZombieScenarioCatalog(schemaVersion: 1, scenarios: [])
     @Published var selectedScenarioID: String?
     @Published var selectedTier: ScenarioTier?
-    @Published var selectedCollectionID = "all"
+    @Published var selectedCollectionID = ScenarioLibrary.playableCollectionID
     @Published var searchText = ""
     @Published var result: RegressionResult?
     @Published var activeGame: PlayableGameState?
@@ -177,12 +187,43 @@ final class ZombieAppStore: ObservableObject {
         }
     }
 
+    var playableSetSummary: String {
+        let playable = ScenarioLibrary.playableScenarios(in: catalog)
+        let tactical = playable.filter { $0.tier == .early }.count
+        let abstract = playable.count - tactical
+        return "\(playable.count) playable games ready: \(tactical) tactical, \(abstract) abstract."
+    }
+
     var selectedScenario: ZombieScenario? {
         if let selectedScenarioID,
            let scenario = catalog.scenarios.first(where: { $0.id == selectedScenarioID }) {
             return scenario
         }
         return filteredScenarios.first
+    }
+
+    func showPlayableGames() {
+        selectedCollectionID = ScenarioLibrary.playableCollectionID
+        selectedTier = nil
+        refreshSelectedScenario()
+    }
+
+    func showAllScenarios() {
+        selectedCollectionID = "all"
+        selectedTier = nil
+        refreshSelectedScenario()
+    }
+
+    func selectCollection(_ collectionID: String) {
+        selectedCollectionID = collectionID
+        selectedTier = nil
+        refreshSelectedScenario()
+    }
+
+    func showTier(_ tier: ScenarioTier?) {
+        selectedCollectionID = "all"
+        selectedTier = tier
+        refreshSelectedScenario()
     }
 
     func runSelectedScenario() {
@@ -627,6 +668,14 @@ final class ZombieAppStore: ObservableObject {
         }
         return records
     }
+
+    func refreshSelectedScenario() {
+        let scenarios = filteredScenarios
+        if let selectedScenarioID, scenarios.contains(where: { $0.id == selectedScenarioID }) {
+            return
+        }
+        selectedScenarioID = scenarios.first?.id
+    }
 }
 
 struct ZombieRootView: View {
@@ -637,18 +686,30 @@ struct ZombieRootView: View {
             List(selection: $store.selectedScenarioID) {
                 Section("Search") {
                     TextField("Search", text: $store.searchText)
-                    Picker("Collection", selection: $store.selectedCollectionID) {
+                    Picker("Collection", selection: Binding(
+                        get: { store.selectedCollectionID },
+                        set: { store.selectCollection($0) }
+                    )) {
                         ForEach(store.collections) { collection in
                             Text(collection.title).tag(collection.id)
                         }
                     }
                 }
+                Section("Play") {
+                    Button {
+                        store.showPlayableGames()
+                    } label: {
+                        Label("Playable Games", systemImage: "gamecontroller")
+                    }
+                    Text(store.playableSetSummary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 Section("Filters") {
-                    Button("All") { store.selectedTier = nil }
+                    Button("All") { store.showAllScenarios() }
                     ForEach(ScenarioTier.allCases) { tier in
                         Button(tier.rawValue.capitalized) {
-                            store.selectedTier = tier
-                            store.selectedScenarioID = store.filteredScenarios.first?.id
+                            store.showTier(tier)
                         }
                     }
                 }
@@ -666,6 +727,9 @@ struct ZombieRootView: View {
                 }
             }
             .navigationTitle("zombie")
+            .onChange(of: store.searchText) { _ in
+                store.refreshSelectedScenario()
+            }
         } detail: {
             ScenarioDetailView(scenario: store.selectedScenario)
                 .frame(minWidth: 820, minHeight: 620)

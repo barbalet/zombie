@@ -8,8 +8,9 @@ Cycles 281-300 close the playable-game baseline. The work focuses on launch guar
 
 ## Implemented
 
-- Added cycle-300 availability labels: `Playable`, `Preview`, `Deferred`, and `Excluded`.
-- Blocked Play Mode launch for Preview, Deferred, mortar-only, and excluded content.
+- Added cycle-300 availability labels and promoted every bundled scenario into the Playable set.
+- Added a first-class `Playable Games` collection and made it the app's default scenario set.
+- Added abstract Play Mode launch paths for the formerly Preview/Deferred vehicle and indirect-fire content.
 - Added versioned `PlayableGameSave` decoding and safe rejection of unsupported save schemas.
 - Added primary/backup save recovery for active Play Mode saves.
 - Added copyable Play Mode JSONL exports for infantry and abstract games.

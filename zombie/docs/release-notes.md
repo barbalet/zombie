@@ -21,10 +21,10 @@ This demo candidate includes a Mac Catalyst app, deterministic scenario catalog,
 
 ## Known Limits
 
-- Preview Mode remains the complete automated path; Play Mode is in active development and currently has early infantry plus selected abstract vehicle/checkpoint/aircraft scenarios.
+- Preview Mode remains the automated validation path; Play Mode now covers every bundled scenario either tactically or through an abstract state model.
 - Fog of war is deferred; actors and logs are visible for replay and review.
 - Vehicle blasts, checkpoint damage, aircraft events, and mortar/indirect-fire events are abstract timing and state systems only.
-- Mortar-only and complex staged vehicle scenarios remain Preview Mode only pending later cycle review.
+- Mortar-only and complex staged vehicle scenarios are playable through abstract setup, warning, route, impact, and damage-state events.
 - Save recovery uses local UserDefaults primary/backup payloads. It is sufficient for the demo baseline, not a multi-slot campaign save system.
 - Screenshot baselines are documented but not yet stored as image snapshots.
 - Packaged app signing is local debug signing only.

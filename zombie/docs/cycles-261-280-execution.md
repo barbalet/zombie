@@ -38,6 +38,8 @@ These scenarios remain Preview Mode only in cycles 261-280:
 
 The reason is not data absence. It is play-policy caution: staged reinforcements, civilian-risk guardrails, horizontal mortar abstractions, and mortar-only content need a later review pass before they become manual decisions.
 
+Later update: the all-games playable pass added those manual decisions as abstract Play Mode paths with source/scope warnings.
+
 ## Verification
 
 - `swift test` passes with 26 tests.

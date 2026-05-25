@@ -148,10 +148,13 @@ public struct ZombieAppSettings: Codable, Equatable {
 }
 
 public enum ScenarioLibrary {
+    public static let playableCollectionID = "play-mode-ready"
+
     public static func collections(for catalog: ZombieScenarioCatalog) -> [ScenarioCollection] {
         let baseIDs = catalog.scenarios.map(\.id)
         var collections: [ScenarioCollection] = [
             ScenarioCollection(id: "all", title: "All Scenarios", scenarioIDs: baseIDs),
+            ScenarioCollection(id: playableCollectionID, title: "Playable Games", scenarioIDs: playableScenarios(in: catalog).map(\.id)),
             ScenarioCollection(id: "early-demo", title: "Early Demo", scenarioIDs: catalog.scenarios.filter { $0.tier == .early }.map(\.id)),
             ScenarioCollection(id: "vehicle-checkpoint", title: "Vehicle and Checkpoint", scenarioIDs: catalog.scenarios.filter { $0.tier == .vehicle || $0.tier == .checkpoint }.map(\.id)),
             ScenarioCollection(id: "advanced", title: "Aircraft and Mortar", scenarioIDs: catalog.scenarios.filter { $0.tier == .aircraft || $0.tier == .mortar }.map(\.id)),
@@ -163,6 +166,10 @@ public enum ScenarioLibrary {
             collections.append(ScenarioCollection(id: id, title: id.replacingOccurrences(of: "-", with: " ").capitalized, scenarioIDs: catalog.scenarios.filter { $0.collections.contains(id) }.map(\.id)))
         }
         return collections.filter { !$0.scenarioIDs.isEmpty }
+    }
+
+    public static func playableScenarios(in catalog: ZombieScenarioCatalog) -> [ZombieScenario] {
+        catalog.scenarios.filter { ScenarioPlayAvailability.forScenario($0).allowsPlayMode }
     }
 
     public static func search(_ query: String, in catalog: ZombieScenarioCatalog) -> [ZombieScenario] {
@@ -254,11 +261,11 @@ public enum ScenarioPlayAvailability: String, Codable, Equatable, CaseIterable, 
         if scenario.tier == .excluded {
             return .excluded
         }
-        if scenario.tier == .deferred || scenario.tier == .mortar || !scenario.playable {
-            return .deferred
-        }
         if scenario.tier == .early || PlayableAbstractEngine.isPlayable(scenario) {
             return .playable
+        }
+        if scenario.tier == .deferred || scenario.tier == .mortar || !scenario.playable {
+            return .deferred
         }
         return .preview
     }
@@ -393,7 +400,27 @@ public enum PlayableReleaseRehearsal {
         "drummuckavall-1975",
         "glasdrumman-1981",
         "kesh-1984",
-        "dungiven-1972"
+        "strabane-1985",
+        "drumnakilly-1988",
+        "operation-conservation-1990",
+        "coagh-1991",
+        "clonoe-1992",
+        "dungiven-1972",
+        "dungannon-1979",
+        "altnaveigh-1981",
+        "ballygawley-landmine-1983",
+        "mullacreevie-1991",
+        "warrenpoint-1979",
+        "fivemiletown-1993",
+        "killeeshil-1994",
+        "derryard-1989",
+        "cloghoge-1992",
+        "glenanne-1991",
+        "loughgall-1987",
+        "newry-road-1993",
+        "lynx-shootdown-1994",
+        "newry-mortar-1985",
+        "osnabruck-mortar-1996"
     ]
 
     public static func run(_ catalog: ZombieScenarioCatalog, side: ForceSide = .player) -> [PlayableReleaseRehearsalResult] {

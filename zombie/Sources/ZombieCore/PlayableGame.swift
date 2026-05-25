@@ -256,13 +256,18 @@ public struct AbstractPlayableGameState: Codable, Equatable, Identifiable {
 public enum PlayableAbstractEngine {
     public static let vehiclePlayPolicy = "Cycle 261 decision: vehicle Play Mode exposes route advance, hold, react, and resolve choices only; mine and blast effects remain abstract outcome events."
     public static let checkpointPlayPolicy = "Cycle 270 decision: checkpoint Play Mode exposes alarm, route, and damage-state decisions only; base layouts and breach details remain abstract."
-    public static let advancedPlayPolicy = "Cycle 276 decision: aircraft Play Mode exposes lane timing, warning markers, damage state, and exits only; mortar-only scenarios remain Preview Mode."
+    public static let advancedPlayPolicy = "Aircraft Play Mode exposes lane timing, warning markers, damage state, and exits only; weapon effects remain abstract outcome events."
+    public static let indirectFirePlayPolicy = "Indirect-fire Play Mode exposes setup, warning, reaction, impact, and damage-state timing only; no operational weapon procedure is modeled."
 
     public static let vehiclePlayableScenarioIDs: Set<String> = [
         "dungiven-1972",
         "dungannon-1979",
         "altnaveigh-1981",
-        "ballygawley-landmine-1983"
+        "ballygawley-landmine-1983",
+        "mullacreevie-1991",
+        "warrenpoint-1979",
+        "fivemiletown-1993",
+        "killeeshil-1994"
     ]
 
     public static let checkpointPlayableScenarioIDs: Set<String> = [
@@ -277,14 +282,20 @@ public enum PlayableAbstractEngine {
         "lynx-shootdown-1994"
     ]
 
+    public static let indirectFirePlayableScenarioIDs: Set<String> = [
+        "newry-mortar-1985",
+        "osnabruck-mortar-1996"
+    ]
+
     public static var abstractPlayableScenarioIDs: Set<String> {
         vehiclePlayableScenarioIDs
             .union(checkpointPlayableScenarioIDs)
             .union(aircraftPlayableScenarioIDs)
+            .union(indirectFirePlayableScenarioIDs)
     }
 
     public static func isPlayable(_ scenario: ZombieScenario) -> Bool {
-        guard scenario.playable else {
+        guard scenario.tier != .excluded else {
             return false
         }
         switch scenario.tier {
@@ -294,6 +305,8 @@ public enum PlayableAbstractEngine {
             return checkpointPlayableScenarioIDs.contains(scenario.id)
         case .aircraft:
             return aircraftPlayableScenarioIDs.contains(scenario.id)
+        case .mortar, .deferred:
+            return indirectFirePlayableScenarioIDs.contains(scenario.id)
         default:
             return false
         }
@@ -308,15 +321,17 @@ public enum PlayableAbstractEngine {
                 return "Abstract Play Mode available: \(checkpointPlayPolicy)"
             case .aircraft:
                 return "Abstract Play Mode available: \(advancedPlayPolicy)"
+            case .mortar, .deferred:
+                return "Abstract Play Mode available: \(indirectFirePlayPolicy)"
             default:
                 return "Use infantry Play Mode for this scenario."
             }
         }
-        if scenario.tier == .mortar || scenario.tier == .deferred || scenario.tier == .excluded {
-            return "Preview Mode only: deferred or mortar-only content is blocked from Play Mode."
+        if scenario.tier == .excluded {
+            return "Excluded from Play Mode by catalog policy."
         }
-        if scenario.tier == .vehicle || scenario.tier == .checkpoint || scenario.tier == .aircraft {
-            return "Preview Mode only for cycles 261-280: this scenario needs more review before manual play."
+        if scenario.tier == .vehicle || scenario.tier == .checkpoint || scenario.tier == .aircraft || scenario.tier == .mortar || scenario.tier == .deferred {
+            return "Abstract Play Mode unavailable because this scenario has no supported abstract state."
         }
         return "Use infantry Play Mode for early scenarios."
     }
@@ -330,15 +345,14 @@ public enum PlayableAbstractEngine {
             return "As \(side), choose route, alarm, reaction, and damage-state timing. Checkpoint play stays at the level of alarms, positions, and abstract structure health."
         case .aircraft:
             return "As \(side), choose lane timing, reaction, and resolution around aircraft markers. The model records warnings, damage states, and exits without operational procedure detail."
+        case .mortar, .deferred:
+            return "As \(side), choose hold, react, and resolve timing around warning and impact markers. Indirect-fire play stays at the level of abstract setup, warning, impact, and damage state."
         default:
             return PlayableGameEngine.objectiveBriefing(for: scenario, humanSide: humanSide)
         }
     }
 
     public static func start(_ scenario: ZombieScenario, humanSide: ForceSide, difficulty: PlayableAIDifficulty = .standard) throws -> AbstractPlayableGameState {
-        guard scenario.playable else {
-            throw AbstractPlayableError.scenarioNotPlayable(scenario.id)
-        }
         guard isPlayable(scenario) else {
             throw AbstractPlayableError.unsupportedTier(scenario.tier)
         }
@@ -395,7 +409,7 @@ public enum PlayableAbstractEngine {
             guard state.phase == .humanActivation else {
                 return false
             }
-            return !scenario.mechanics.checkpoints.isEmpty || !scenario.mechanics.aircraft.isEmpty || !scenario.mechanics.indirectFire.isEmpty
+            return hasReactionAvailable(in: state, scenario: scenario)
         case .resolve:
             return state.phase == .resolution
         }
@@ -667,6 +681,9 @@ public enum PlayableAbstractEngine {
             return "structure disabled"
         }
         let hasUnresolvedIndirectFire = scenario.mechanics.indirectFire.contains { !state.resolvedImpactIDs.contains($0.id) }
+        if !scenario.mechanics.indirectFire.isEmpty && !hasUnresolvedIndirectFire && scenario.mechanics.vehicles.isEmpty && scenario.mechanics.aircraft.isEmpty {
+            return "indirect fire resolved"
+        }
         if !scenario.mechanics.vehicles.isEmpty && allRoutesComplete(in: state, scenario: scenario) && scenario.tier == .vehicle {
             return "route completed"
         }
@@ -713,6 +730,25 @@ public enum PlayableAbstractEngine {
                 damageState != .downed &&
                 damageState != .exited
         }
+    }
+
+    private static func hasReactionAvailable(in state: AbstractPlayableGameState, scenario: ZombieScenario) -> Bool {
+        if scenario.mechanics.checkpoints.contains(where: { checkpoint in
+            checkpoint.alarmTurn <= state.turn && !state.alarmedCheckpointIDs.contains(checkpoint.id)
+        }) {
+            return true
+        }
+        if scenario.mechanics.aircraft.contains(where: { lane in
+            lane.entryTurn <= state.turn &&
+                state.turn <= lane.exitTurn &&
+                state.aircraftDamageStates[lane.id, default: .undamaged] == .undamaged
+        }) {
+            return true
+        }
+        if scenario.mechanics.indirectFire.contains(where: { !state.resolvedImpactIDs.contains($0.id) }) {
+            return true
+        }
+        return false
     }
 
     private static func allRoutesComplete(in state: AbstractPlayableGameState, scenario: ZombieScenario) -> Bool {

@@ -11,7 +11,7 @@ final class ZombieUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["zombie"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.buttons["All"].exists)
-        XCTAssertTrue(app.staticTexts["Scenarios"].exists)
+        XCTAssertTrue(app.buttons["Playable Games"].exists)
 
         let runPreview = app.buttons["Run Preview"].firstMatch
         XCTAssertTrue(runPreview.waitForExistence(timeout: 8))
@@ -19,6 +19,24 @@ final class ZombieUITests: XCTestCase {
 
         let regressionPreview = app.staticTexts["Regression Preview"].firstMatch
         XCTAssertTrue(regressionPreview.waitForExistence(timeout: 8))
+    }
+
+    func testPlayableGamesSetIsOfferedOnLaunch() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["zombie"].waitForExistence(timeout: 8))
+
+        let playableGames = app.buttons["Playable Games"].firstMatch
+        XCTAssertTrue(playableGames.waitForExistence(timeout: 8))
+        playableGames.tap()
+
+        let readySummary = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "playable games ready")).firstMatch
+        XCTAssertTrue(readySummary.waitForExistence(timeout: 8))
+
+        let startGame = app.buttons["Start Game"].firstMatch
+        XCTAssertTrue(startGame.waitForExistence(timeout: 8))
+        XCTAssertTrue(startGame.isEnabled)
     }
 
     func testScenarioBrowserStartsPlayMode() throws {
@@ -124,7 +142,7 @@ final class ZombieUITests: XCTestCase {
         XCTAssertTrue(routeEvent.waitForExistence(timeout: 8))
     }
 
-    func testDeferredScenarioCannotStartPlayMode() throws {
+    func testIndirectFireScenarioStartsAbstractPlayMode() throws {
         let app = XCUIApplication()
         app.launch()
 
@@ -135,13 +153,30 @@ final class ZombieUITests: XCTestCase {
         search.tap()
         search.typeText("1985 Newry Mortar")
 
-        let mortar = app.staticTexts["1985 Newry Mortar Attack"].firstMatch
-        XCTAssertTrue(mortar.waitForExistence(timeout: 8))
-        mortar.tap()
+        let mortarTitle = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "1985 Newry Mortar Attack"))
+            .firstMatch
+        XCTAssertTrue(mortarTitle.waitForExistence(timeout: 8))
 
         let startGame = app.buttons["Start Game"].firstMatch
         XCTAssertTrue(startGame.waitForExistence(timeout: 8))
-        XCTAssertFalse(startGame.isEnabled)
+        XCTAssertTrue(startGame.isEnabled)
+        startGame.tap()
+
+        XCTAssertTrue(app.staticTexts["Abstract Play Mode"].waitForExistence(timeout: 8))
+
+        let react = app.buttons["React"].firstMatch
+        XCTAssertTrue(react.waitForExistence(timeout: 8))
+        XCTAssertTrue(react.isEnabled)
+        react.tap()
+
+        let resolve = app.buttons["Resolve"].firstMatch
+        XCTAssertTrue(resolve.waitForExistence(timeout: 8))
+        XCTAssertTrue(resolve.isEnabled)
+        resolve.tap()
+
+        let setupEvent = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "indirect-setup")).firstMatch
+        XCTAssertTrue(setupEvent.waitForExistence(timeout: 8))
     }
 
     func testSearchFindsAdvancedScenario() throws {

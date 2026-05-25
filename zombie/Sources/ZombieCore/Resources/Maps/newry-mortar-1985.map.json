@@ -63,5 +63,5 @@
     ],
     "notes": "Roads, lanes, rails, and exits are fastest; cover, hedges, and elevation are slower; walls, buildings, bases, checkpoints, rivers, and protected cells block infantry movement."
   },
-  "notes": "Police station and surrounding civilian area are abstracted; this remains non-playable review content. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
+  "notes": "Police station and surrounding civilian area are abstracted for high-level Play Mode. Generated full-grid terrain map for movement, cover, roads, walls, protected cells, and blocked terrain."
 }

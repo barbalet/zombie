@@ -555,8 +555,11 @@ public struct ZombieScenario: Codable, Identifiable, Equatable {
     }
 
     static func defaultScopeWarning(tier: ScenarioTier, tags: [String]) -> String {
-        if tier == .deferred || tier == .excluded {
-            return "Not part of ordinary playable scope; retained for source review and future design only."
+        if tier == .excluded {
+            return "Excluded from Play Mode; retained for source review only."
+        }
+        if tier == .deferred {
+            return "Playable only as high-level source-review abstraction."
         }
         if tags.contains("civilian-risk") {
             return "Civilian presence is represented only as protected noncombat map space."
