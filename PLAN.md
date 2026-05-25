@@ -318,3 +318,125 @@ By cycle 200:
 - Excluded and deferred scenarios cannot be accidentally launched as ordinary playable battles.
 - Unit, regression, UI, screenshot, packaging, accessibility, and performance tests pass.
 - README and in-app source panels keep Wikipedia links and neutral historical notes visible.
+
+## Playable Game 100-Cycle Plan
+
+Cycles 201-300 turn the current automated preview into a game a person can play through. For this section, "playable" means the user can choose a scenario, pick either side, select actors, move, attack, wait, end turns, face a deterministic AI opponent, reach a win/loss/draw outcome, inspect the event log, and replay or resume the run.
+
+The first target is side-selectable manual play for early infantry scenarios. Vehicle, checkpoint, and aircraft scenarios become playable only where the current abstractions can be presented as safe, high-level game decisions without adding operational weapon procedures.
+
+| Cycle | Work | Goal | Acceptance |
+|---:|---|---|---|
+| 201 | Current-state correction | Rename the existing automated path as Preview Mode. | README and release notes distinguish Preview Mode from Play Mode. |
+| 202 | Playable scope lock | Define manual-play scope for cycle 300. | Scope says early infantry is required; other tiers are conditional. |
+| 203 | Game state model | Add a persistent turn-by-turn `PlayableGameState`. | Unit test initializes state from one scenario. |
+| 204 | Game state fixtures | Add deterministic fixtures for early infantry starts. | Fixtures round-trip through encode/decode. |
+| 205 | Side selection model | Add selected side independent of scenario historical labels. | Unit test selects either force as human side. |
+| 206 | Side inversion rules | Make actor ownership, objectives, and log names invert safely. | Same scenario can launch from either side. |
+| 207 | Play launch route | Add `Start Game` beside `Run Preview`. | UI test sees both launch options. |
+| 208 | Play session store | Keep active game state separate from catalog browsing. | Switching scenarios does not corrupt an active run. |
+| 209 | Turn phase enum | Define setup, human activation, AI activation, resolution, finished. | Illegal phase transitions are rejected. |
+| 210 | Command validation | Add typed commands for move, attack, wait, and end turn. | Invalid command tests explain why blocked. |
+| 211 | Legal movement service | Calculate legal cells from terrain, occupancy, and movement costs. | Protected and blocked cells are never legal. |
+| 212 | Legal attack service | Calculate legal targets from range, side, and protected zones. | Protected-zone attack test fails closed. |
+| 213 | Board selection state | Track selected actor, move target, and attack target. | Selection can be cleared without ending turn. |
+| 214 | Movement execution | Apply one legal move and emit a log event. | Actor position changes deterministically. |
+| 215 | Attack execution | Route manual attacks through Field of Chaos combat. | Combat log includes dice/combat message. |
+| 216 | Wait execution | Let an actor spend activation without movement or attack. | Wait event appears in log. |
+| 217 | End-turn execution | Advance from human phase to AI phase. | Turn count increments only after both sides resolve. |
+| 218 | First manual scenario | Make Drummuckavall playable by one human side. | Local smoke completes a short manual sequence. |
+| 219 | AI adapter | Reuse simulator decision rules as stepable AI commands. | AI emits move, attack, or wait commands. |
+| 220 | AI activation loop | Let AI complete a full side turn. | AI cannot act with human-controlled actors. |
+| 221 | Outcome evaluator | Evaluate force survival, objective distance, and turn limit. | Scenario ends with stable outcome text. |
+| 222 | Early manual smoke | Script one complete Drummuckavall playthrough. | Smoke reaches finished state. |
+| 223 | Play board shell | Add a dedicated play screen. | Board, side, turn, phase, and objective are visible. |
+| 224 | Actor inspector | Show selected actor stats, weapon, skills, and status. | UI test reads selected actor details. |
+| 225 | Action toolbar | Add Move, Attack, Wait, End Turn, and Cancel controls. | Buttons enable only when legal. |
+| 226 | Move highlights | Highlight legal movement cells. | Screenshot check shows nonblank move markers. |
+| 227 | Target highlights | Highlight legal attack targets. | Screenshot check shows target markers. |
+| 228 | Event log integration | Show live play log, not only regression output. | Latest command appears at top or bottom consistently. |
+| 229 | Keyboard controls | Add keyboard paths for selection, cancel, wait, and end turn. | UI smoke can play without mouse-only steps. |
+| 230 | Error messages | Explain blocked movement, attacks, and turn actions. | UI test triggers one blocked action message. |
+| 231 | Save model | Save active scenario, side, actors, turn, log, and seed. | Unit test saves and restores a mid-turn game. |
+| 232 | Resume flow | Add resume from last local game. | Relaunch can restore the saved run. |
+| 233 | New game reset | Let the user abandon a run and start over. | Reset clears active state after confirmation. |
+| 234 | Completion records | Record finished manual games separately from previews. | Completion panel shows side and outcome. |
+| 235 | Side-select UI | Add clear force picker before starting play. | User can start as either historical side. |
+| 236 | Objective copy | Rewrite objective text for the selected side. | Objective text does not assume the original player side. |
+| 237 | Force comparison | Show force size, weapons, and difficulty before launch. | Side picker includes comparison panel. |
+| 238 | Difficulty baseline | Add easy, standard, and hard AI settings for early infantry. | AI setting persists into play state. |
+| 239 | AI scoring | Teach AI to prefer objectives, cover, and active targets. | Regression proves no idle loop on early maps. |
+| 240 | Manual alpha 1 | Ship one polished early infantry manual scenario. | Drummuckavall is playable from either side. |
+| 241 | Glasdrumman manual pass | Tune terrain, objectives, and AI for Glasdrumman. | Scenario completes from both sides. |
+| 242 | Kesh manual pass | Tune protected cells and break-contact objective. | Protected restaurant area remains untargetable. |
+| 243 | Strabane manual pass | Tune exit objective and small-force AI. | Scenario completes from both sides. |
+| 244 | Drumnakilly manual pass | Tune vehicle-approach abstraction for infantry play. | Scenario completes from both sides. |
+| 245 | Operation Conservation pass | Tune counter-ambush objective and terrain. | Scenario completes from both sides. |
+| 246 | Coagh manual pass | Tune village protection and engagement ranges. | Scenario completes from both sides. |
+| 247 | Clonoe manual pass | Tune sensitivity copy and protected areas. | Scenario completes from both sides. |
+| 248 | Early corpus replay | Add deterministic replay for all manual early scenarios. | Replay corpus is green. |
+| 249 | Manual alpha 2 | All 8 early infantry scenarios are side-selectable. | Batch UI smoke starts each from both sides. |
+| 250 | Balance review 1 | Review early outcomes and turn limits. | No early scenario ends trivially in 1 turn. |
+| 251 | AI fairness review | Check AI avoids protected zones and impossible attacks. | AI protected-zone violations stay at zero. |
+| 252 | Fog-of-war decision | Decide whether hidden units are in scope for cycle 300. | Decision is documented; default remains visible units if deferred. |
+| 253 | Actor status UI | Show active, down, unconscious, or dead states clearly. | Status changes are visible after attacks. |
+| 254 | Turn order UI | Show current actor and remaining activations. | UI test reads active actor label. |
+| 255 | Log filters | Filter log by movement, attacks, AI, and outcome. | Filters do not alter saved raw log. |
+| 256 | Replay seed UI | Show and copy the deterministic seed. | Restored seed reproduces same AI decisions. |
+| 257 | Undo policy | Add cancel-before-commit; no full undo after dice. | UI makes the policy clear. |
+| 258 | Tutorial scenario | Add a fictional training scenario for controls. | Tutorial has no real-world tragedy content. |
+| 259 | Tutorial steps | Guide selection, movement, attack, wait, and end turn. | UI test completes tutorial. |
+| 260 | Manual beta 1 | Early infantry campaign is playable end to end. | Human can finish any early scenario from either side. |
+| 261 | Vehicle play design | Define human decisions for vehicle/checkpoint abstractions. | Design avoids operational weapon procedures. |
+| 262 | Vehicle state model | Represent route progress, hazards, alarms, and outcomes stepably. | Unit test steps one route turn. |
+| 263 | Vehicle side selection | Let human choose convoy/security or opposing side where appropriate. | Side picker explains asymmetric decisions. |
+| 264 | Vehicle command set | Add route advance, hold, react, and resolve abstraction commands. | Invalid route commands are blocked. |
+| 265 | Dungiven vehicle pass | Make Dungiven playable with abstract route decisions. | Scenario finishes from both sides if safe. |
+| 266 | Dungannon vehicle pass | Make Dungannon playable with route/hazard decisions. | Scenario finishes from both sides if safe. |
+| 267 | Altnaveigh vehicle pass | Make Altnaveigh playable with route/hazard decisions. | Scenario finishes from both sides if safe. |
+| 268 | Ballygawley vehicle pass | Make Ballygawley playable with route/hazard decisions. | Scenario finishes from both sides if safe. |
+| 269 | Vehicle beta review | Decide which vehicle scenarios are ready for cycle 300. | Non-ready vehicle scenarios remain preview-only. |
+| 270 | Checkpoint play design | Define checkpoint/base decision layer. | Design uses alarms, positions, and damage states only. |
+| 271 | Checkpoint state model | Represent alarm, route, structure, and response state. | Unit test steps alarm transition. |
+| 272 | Derryard checkpoint pass | Make Derryard playable if abstraction is sufficient. | Scenario finishes or remains marked preview-only. |
+| 273 | Cloghoge checkpoint pass | Make Cloghoge playable if abstraction is sufficient. | Scenario finishes or remains marked preview-only. |
+| 274 | Glenanne checkpoint pass | Make Glenanne playable if abstraction is sufficient. | Scenario finishes or remains marked preview-only. |
+| 275 | Loughgall checkpoint pass | Make Loughgall playable if abstraction is sufficient. | Scenario finishes or remains marked preview-only. |
+| 276 | Advanced play policy | Decide human-facing aircraft and mortar decisions. | Policy rejects any operational procedure detail. |
+| 277 | Aircraft step model | Represent lanes, warnings, damage, and exits stepably. | Unit test steps Newry Road lane events. |
+| 278 | Aircraft UI markers | Show lane, timing, and damage state in Play Mode. | Screenshot shows lane markers and turn timing. |
+| 279 | Newry Road play pass | Make Newry Road playable if policy allows. | Scenario finishes or remains preview-only. |
+| 280 | Lynx play pass | Make Lynx scenario playable if policy allows. | Scenario finishes or remains preview-only. |
+| 281 | Deferred guardrails | Keep deferred mortar review scenarios out of Play Mode. | UI cannot start deferred scenarios. |
+| 282 | Scenario availability labels | Label Playable, Preview, Deferred, and Excluded clearly. | Browser labels match scenario state. |
+| 283 | Accessibility pass 1 | Check board focus, labels, controls, and dynamic text. | Accessibility smoke covers Play Mode. |
+| 284 | Performance pass 1 | Profile manual play on largest early maps. | Board input remains responsive. |
+| 285 | Save migration | Add schema versioning for play saves. | Old or invalid saves fail safely. |
+| 286 | Crash-safe saves | Write saves atomically. | Interrupted save test does not corrupt previous save. |
+| 287 | Export play log | Export manual play logs as JSONL. | Export includes side, seed, scenario, and outcome. |
+| 288 | Export summary | Export human-readable after-action summary. | Summary includes source link and sensitivity warning. |
+| 289 | Playtest script | Write exact playtest paths for tutorial and 3 scenarios. | Script can be followed by a fresh tester. |
+| 290 | Manual beta 2 | Playtest tutorial, 3 early scenarios, and 1 non-infantry scenario. | QA notes contain no untriaged blocker. |
+| 291 | Bug buffer 1 | Fix blockers in side selection and launch. | Targeted UI tests green. |
+| 292 | Bug buffer 2 | Fix blockers in commands and AI. | Manual replay corpus green. |
+| 293 | Bug buffer 3 | Fix blockers in saves and resume. | Save/resume smoke green. |
+| 294 | Bug buffer 4 | Fix blockers in event logs and exports. | Export tests green. |
+| 295 | Content lock | Lock cycle-300 playable scenario list. | Browser availability labels are final. |
+| 296 | Documentation pass | Update README, demo script, and release notes. | Docs say exactly what is playable. |
+| 297 | Full regression | Run unit, regression, UI, and manual replay tests. | All required automated tests pass. |
+| 298 | Package candidate | Build a local Mac Catalyst package. | Packaged app launches and starts Play Mode. |
+| 299 | Final rehearsal | Play tutorial and at least 3 side-selectable scenarios. | Rehearsal reaches outcomes without intervention. |
+| 300 | Playable game release | Tag the playable-game milestone. | User can pick either side and play through to an outcome. |
+
+## Playable Game Acceptance
+
+By cycle 300:
+
+- The app has distinct `Run Preview` and `Start Game` paths.
+- A user can pick either side before launching a playable scenario.
+- All 8 early infantry scenarios can be played from either side to a win/loss/draw outcome.
+- At least one non-infantry scenario tier is playable if its abstraction remains safe and understandable.
+- Deferred and excluded scenarios cannot be launched in Play Mode.
+- The other side is controlled by deterministic AI with no protected-zone violations.
+- The player can select actors, move, attack, wait, end turns, save, resume, and export the event log.
+- The packaged Mac Catalyst app launches locally and passes unit, regression, UI, replay, and smoke checks.
