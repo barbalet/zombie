@@ -12,9 +12,11 @@ public enum ScenarioTier: String, Codable, CaseIterable, Identifiable {
     public var id: String { rawValue }
 }
 
-public enum ForceSide: String, Codable, CaseIterable {
+public enum ForceSide: String, Codable, CaseIterable, Hashable, Identifiable {
     case player
     case opponent
+
+    public var id: String { rawValue }
 }
 
 public enum ActorRole: String, Codable, CaseIterable {

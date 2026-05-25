@@ -21,6 +21,30 @@ final class ZombieUITests: XCTestCase {
         XCTAssertTrue(regressionPreview.waitForExistence(timeout: 8))
     }
 
+    func testScenarioBrowserStartsPlayMode() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["zombie"].waitForExistence(timeout: 8))
+
+        let search = app.textFields["Search"].firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 8))
+        search.tap()
+        search.typeText("Drummuckavall")
+
+        let drummuckavall = app.staticTexts["Drummuckavall Ambush"].firstMatch
+        XCTAssertTrue(drummuckavall.waitForExistence(timeout: 8))
+        drummuckavall.tap()
+
+        let startGame = app.buttons["Start Game"].firstMatch
+        XCTAssertTrue(startGame.waitForExistence(timeout: 8))
+        XCTAssertTrue(startGame.isEnabled)
+        startGame.tap()
+
+        let playModeStarted = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Play Mode started")).firstMatch
+        XCTAssertTrue(playModeStarted.waitForExistence(timeout: 8))
+    }
+
     func testSearchFindsAdvancedScenario() throws {
         let app = XCUIApplication()
         app.launch()

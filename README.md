@@ -49,6 +49,8 @@ Scenario data should include:
 
 The first 200-cycle implementation now includes a local SwiftPM workspace and `zombie.xcodeproj` Mac Catalyst app. The app loads the bundled catalog, searches and filters scenarios, shows source links, warnings, force/actor panels, tactical grid previews, confidence metadata, and deterministic regression previews.
 
+Cycle 201 starts the playable-game pass. The existing automated path is now treated as **Preview Mode**: it runs deterministic scenario playback for validation, demonstrations, and regression checks. The new **Play Mode** path is being added beside it so a user can choose a side and step through a scenario manually.
+
 The bundled catalog currently contains 24 scenarios:
 
 - 8 early infantry scenarios.

@@ -173,4 +173,74 @@ final class ZombieCoreTests: XCTestCase {
             XCTAssertFalse(scenario.map.protectedCellSet.isEmpty, scenario.id)
         }
     }
+
+    func testPlayableGameStartsFromEitherSideAndRoundTrips() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let scenario = try XCTUnwrap(catalog.scenarios.first { $0.id == "drummuckavall-1975" })
+
+        let playerState = try PlayableGameEngine.start(scenario, humanSide: .player)
+        let opponentState = try PlayableGameEngine.start(scenario, humanSide: .opponent)
+
+        XCTAssertEqual(playerState.phase, .humanActivation)
+        XCTAssertEqual(opponentState.phase, .humanActivation)
+        XCTAssertEqual(playerState.humanSide, .player)
+        XCTAssertEqual(opponentState.humanSide, .opponent)
+        XCTAssertNotEqual(playerState.selectedActorID, opponentState.selectedActorID)
+
+        let data = try JSONEncoder().encode(playerState)
+        let restored = try JSONDecoder().decode(PlayableGameState.self, from: data)
+        XCTAssertEqual(restored, playerState)
+    }
+
+    func testPlayableMoveWaitAndAITurnAdvance() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let scenario = try XCTUnwrap(catalog.scenarios.first { $0.id == "drummuckavall-1975" })
+        var state = try PlayableGameEngine.start(scenario, humanSide: .player)
+        let actorID = try XCTUnwrap(state.selectedActorID)
+        let destination = try XCTUnwrap(PlayableGameEngine.legalMoveDestinations(for: actorID, in: state, scenario: scenario).first)
+
+        state = try PlayableGameEngine.applying(.move(actorID: actorID, destination: destination), to: state, scenario: scenario)
+        XCTAssertEqual(state.actors.first { $0.id == actorID }?.position, destination)
+        XCTAssertTrue(state.events.contains { $0.phase == "move" })
+
+        state = try PlayableGameEngine.applying(.endTurn, to: state, scenario: scenario)
+        XCTAssertEqual(state.phase, .humanActivation)
+        XCTAssertEqual(state.turn, 2)
+        XCTAssertTrue(state.events.contains { $0.phase.hasPrefix("ai-") })
+    }
+
+    func testPlayableAttackUsesFieldOfChaosCombat() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        var selectedScenario: ZombieScenario?
+        var selectedState: PlayableGameState?
+        var selectedActorID: String?
+        var selectedTargetID: String?
+
+        for scenario in catalog.scenarios where scenario.tier == .early && scenario.playable {
+            var state = try PlayableGameEngine.start(scenario, humanSide: .player)
+            for actor in state.actors where actor.side == .player && actor.active {
+                let targets = PlayableGameEngine.legalAttackTargets(for: actor.id, in: state, scenario: scenario)
+                if let target = targets.first {
+                    state.selectedActorID = actor.id
+                    selectedScenario = scenario
+                    selectedState = state
+                    selectedActorID = actor.id
+                    selectedTargetID = target.id
+                    break
+                }
+            }
+            if selectedScenario != nil {
+                break
+            }
+        }
+
+        let scenario = try XCTUnwrap(selectedScenario)
+        let state = try XCTUnwrap(selectedState)
+        let actorID = try XCTUnwrap(selectedActorID)
+        let targetID = try XCTUnwrap(selectedTargetID)
+
+        let after = try PlayableGameEngine.applying(.attack(actorID: actorID, targetID: targetID), to: state, scenario: scenario)
+        XCTAssertTrue(after.events.contains { $0.phase == "attack" })
+        XCTAssertLessThan(after.actors.first { $0.id == actorID }?.roundsInClip ?? Int.max, state.actors.first { $0.id == actorID }?.roundsInClip ?? 0)
+    }
 }

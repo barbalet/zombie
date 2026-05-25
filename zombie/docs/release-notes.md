@@ -11,11 +11,13 @@ This demo candidate includes a Mac Catalyst app, deterministic scenario catalog,
 - Scenario browser with search, tier filters, collections, source links, warnings, confidence fields, and tactical grid previews.
 - Early infantry, vehicle, checkpoint, aircraft, and deferred mortar data.
 - Deterministic regression simulator for infantry, vehicle/checkpoint, aircraft, and indirect-fire abstractions.
+- Preview Mode for automated deterministic playback.
+- Initial Play Mode spine for early infantry scenarios with side selection, manual commands, and deterministic AI stepping.
 - Unit, UI, regression, packaging, and diagnostics scripts.
 
 ## Known Limits
 
-- Gameplay is still an automated preview, not a complete manual turn-by-turn game.
+- Preview Mode remains the complete automated path; Play Mode is in active development and currently targets early infantry scenarios first.
 - Aircraft and mortar events are abstract timing systems only.
 - Screenshot baselines are documented but not yet stored as image snapshots.
 - Packaged app signing is local debug signing only.

@@ -325,6 +325,14 @@ Cycles 201-300 turn the current automated preview into a game a person can play 
 
 The first target is side-selectable manual play for early infantry scenarios. Vehicle, checkpoint, and aircraft scenarios become playable only where the current abstractions can be presented as safe, high-level game decisions without adding operational weapon procedures.
 
+Cycles 201-220 have been run into the first Play Mode spine:
+
+- The automated simulator path is now documented as Preview Mode.
+- `PlayableGameState`, side selection, phases, commands, movement, attack, wait, end-turn, and deterministic AI activation are implemented.
+- The app has a `Start Game` path beside `Run Preview` for early infantry scenarios.
+- Tests cover side selection, Codable state round-trip, legal movement, AI turn advancement, and Field of Chaos-backed attacks.
+- Execution notes are recorded in [zombie/docs/cycles-201-220-execution.md](zombie/docs/cycles-201-220-execution.md).
+
 | Cycle | Work | Goal | Acceptance |
 |---:|---|---|---|
 | 201 | Current-state correction | Rename the existing automated path as Preview Mode. | README and release notes distinguish Preview Mode from Play Mode. |

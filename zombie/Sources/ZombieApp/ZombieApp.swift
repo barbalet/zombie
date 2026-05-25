@@ -51,6 +51,9 @@ final class ZombieAppStore: ObservableObject {
     @Published var selectedCollectionID = "all"
     @Published var searchText = ""
     @Published var result: RegressionResult?
+    @Published var activeGame: PlayableGameState?
+    @Published var selectedHumanSide: ForceSide = .player
+    @Published var playError: String?
     @Published var validationIssues: [ScenarioValidationIssue] = []
     @Published var status = "Loading scenarios..."
     @Published var completionRecords: [ScenarioCompletionRecord] = []
@@ -104,6 +107,86 @@ final class ZombieAppStore: ObservableObject {
         result = simulator.run(selectedScenario)
         upsertCompletion(for: selectedScenario, result: result)
         status = "\(selectedScenario.title): \(result?.outcome ?? "no outcome")."
+    }
+
+    func startSelectedGame() {
+        guard let selectedScenario else {
+            status = "No scenario selected."
+            return
+        }
+        do {
+            activeGame = try PlayableGameEngine.start(selectedScenario, humanSide: selectedHumanSide)
+            result = nil
+            playError = nil
+            status = "\(selectedScenario.title): Play Mode started."
+        } catch {
+            playError = String(describing: error)
+            status = "\(selectedScenario.title): \(playError ?? "Play Mode unavailable")."
+        }
+    }
+
+    func selectActor(_ actorID: String?) {
+        activeGame?.selectedActorID = actorID
+        activeGame?.moveTarget = nil
+        activeGame?.attackTargetID = nil
+        playError = nil
+    }
+
+    func legalMoves(for scenario: ZombieScenario) -> [GridPoint] {
+        guard let activeGame, activeGame.scenarioID == scenario.id, let actorID = activeGame.selectedActorID else {
+            return []
+        }
+        return PlayableGameEngine.legalMoveDestinations(for: actorID, in: activeGame, scenario: scenario)
+    }
+
+    func legalTargets(for scenario: ZombieScenario) -> [PlayableActorState] {
+        guard let activeGame, activeGame.scenarioID == scenario.id, let actorID = activeGame.selectedActorID else {
+            return []
+        }
+        return PlayableGameEngine.legalAttackTargets(for: actorID, in: activeGame, scenario: scenario)
+    }
+
+    func moveSelectedActor(to destination: GridPoint, in scenario: ZombieScenario) {
+        guard let actorID = activeGame?.selectedActorID else {
+            return
+        }
+        apply(.move(actorID: actorID, destination: destination), in: scenario)
+    }
+
+    func attackSelectedTarget(_ targetID: String, in scenario: ZombieScenario) {
+        guard let actorID = activeGame?.selectedActorID else {
+            return
+        }
+        apply(.attack(actorID: actorID, targetID: targetID), in: scenario)
+    }
+
+    func waitSelectedActor(in scenario: ZombieScenario) {
+        guard let actorID = activeGame?.selectedActorID else {
+            return
+        }
+        apply(.wait(actorID: actorID), in: scenario)
+    }
+
+    func endTurn(in scenario: ZombieScenario) {
+        apply(.endTurn, in: scenario)
+    }
+
+    private func apply(_ command: PlayableCommand, in scenario: ZombieScenario) {
+        guard let activeGame else {
+            return
+        }
+        do {
+            self.activeGame = try PlayableGameEngine.applying(command, to: activeGame, scenario: scenario)
+            playError = nil
+            if let outcome = self.activeGame?.outcome {
+                status = "\(scenario.title): \(outcome)."
+            } else {
+                status = "\(scenario.title): Play Mode turn \(self.activeGame?.turn ?? 1)."
+            }
+        } catch {
+            playError = String(describing: error)
+            status = "\(scenario.title): \(playError ?? "Command blocked")."
+        }
     }
 
     var collections: [ScenarioCollection] {
@@ -226,6 +309,20 @@ struct ScenarioDetailView: View {
                             Label("Run Preview", systemImage: "play.fill")
                         }
                         .disabled(!scenario.playable)
+
+                        Picker("Play Side", selection: $store.selectedHumanSide) {
+                            ForEach(ForceSide.allCases, id: \.self) { side in
+                                Text(sideName(side, in: scenario)).tag(side)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        Button {
+                            store.startSelectedGame()
+                        } label: {
+                            Label("Start Game", systemImage: "flag.checkered")
+                        }
+                        .disabled(!scenario.playable || scenario.tier != .early)
                     }
 
                     Text(scenario.objective.description)
@@ -255,6 +352,10 @@ struct ScenarioDetailView: View {
                         EventLogView(result: result)
                     }
 
+                    if let game = store.activeGame, game.scenarioID == scenario.id {
+                        PlayModeView(scenario: scenario, game: game)
+                    }
+
                     Text(scenario.implementationNotes)
                         .font(.callout)
                         .foregroundStyle(.secondary)
@@ -262,6 +363,10 @@ struct ScenarioDetailView: View {
                 .padding(24)
             }
         )
+    }
+
+    private func sideName(_ side: ForceSide, in scenario: ZombieScenario) -> String {
+        scenario.forces.first { $0.side == side }.map { "\($0.name) - \($0.unit)" } ?? side.rawValue.capitalized
     }
 }
 
@@ -424,6 +529,159 @@ struct EventLogView: View {
                     .monospacedDigit()
             }
         }
+    }
+}
+
+struct PlayModeView: View {
+    @EnvironmentObject private var store: ZombieAppStore
+    let scenario: ZombieScenario
+    let game: PlayableGameState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Play Mode").font(.headline)
+            Text("Turn \(game.turn) - \(game.phase.rawValue) - Human side: \(sideName(game.humanSide))")
+                .foregroundStyle(.secondary)
+
+            if let outcome = game.outcome {
+                Text("Outcome: \(outcome)")
+                    .fontWeight(.semibold)
+            }
+
+            if let playError = store.playError {
+                Text(playError)
+                    .font(.callout)
+                    .foregroundStyle(.red)
+            }
+
+            HStack(alignment: .top, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Picker("Actor", selection: Binding(
+                        get: { game.selectedActorID ?? "" },
+                        set: { store.selectActor($0.isEmpty ? nil : $0) }
+                    )) {
+                        Text("Select actor").tag("")
+                        ForEach(game.actors.filter { $0.side == game.humanSide && $0.active && !$0.acted }) { actor in
+                            Text(actorName(actor.id)).tag(actor.id)
+                        }
+                    }
+                    .frame(maxWidth: 280)
+
+                    HStack {
+                        Button("Wait") {
+                            store.waitSelectedActor(in: scenario)
+                        }
+                        .disabled(game.selectedActorID == nil || game.phase != .humanActivation)
+
+                        Button("End Turn") {
+                            store.endTurn(in: scenario)
+                        }
+                        .disabled(game.phase != .humanActivation)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Move").font(.subheadline).fontWeight(.semibold)
+                    if store.legalMoves(for: scenario).isEmpty {
+                        Text("No legal move selected.").font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        ForEach(store.legalMoves(for: scenario)) { point in
+                            Button(point.id) {
+                                store.moveSelectedActor(to: point, in: scenario)
+                            }
+                        }
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Attack").font(.subheadline).fontWeight(.semibold)
+                    let targets = store.legalTargets(for: scenario)
+                    if targets.isEmpty {
+                        Text("No legal target selected.").font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        ForEach(targets) { target in
+                            Button(actorName(target.id)) {
+                                store.attackSelectedTarget(target.id, in: scenario)
+                            }
+                        }
+                    }
+                }
+            }
+
+            PlayBoardView(scenario: scenario, game: game)
+                .frame(maxWidth: 760)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Play Log").font(.subheadline).fontWeight(.semibold)
+                ForEach(game.events.suffix(12)) { event in
+                    Text("T\(event.turn) \(event.phase): \(event.summary)")
+                        .font(.caption)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .padding(14)
+        .background(Color.black.opacity(0.05))
+    }
+
+    private func actorName(_ id: String) -> String {
+        scenario.actors.first { $0.id == id }?.name ?? id
+    }
+
+    private func sideName(_ side: ForceSide) -> String {
+        scenario.forces.first { $0.side == side }?.name ?? side.rawValue.capitalized
+    }
+
+}
+
+struct PlayBoardView: View {
+    let scenario: ZombieScenario
+    let game: PlayableGameState
+
+    var body: some View {
+        let columns = Array(repeating: GridItem(.fixed(26), spacing: 2), count: scenario.map.width)
+        LazyVGrid(columns: columns, spacing: 2) {
+            ForEach(0..<(scenario.map.width * scenario.map.height), id: \.self) { index in
+                let point = GridPoint(x: index % scenario.map.width, y: index / scenario.map.width)
+                Rectangle()
+                    .fill(color(for: point))
+                    .overlay {
+                        if let actor = actor(at: point) {
+                            ZStack {
+                                Circle()
+                                    .fill(actor.side == game.humanSide ? Color.blue : Color.red)
+                                    .padding(5)
+                                if actor.acted {
+                                    Circle().stroke(Color.white, lineWidth: 2).padding(4)
+                                }
+                            }
+                        }
+                    }
+                    .frame(width: 26, height: 26)
+                    .accessibilityLabel("Play cell \(point.x), \(point.y)")
+            }
+        }
+        .padding(10)
+        .background(Color.black.opacity(0.08))
+    }
+
+    private func actor(at point: GridPoint) -> PlayableActorState? {
+        game.actors.first { $0.position == point && $0.active }
+    }
+
+    private func color(for point: GridPoint) -> Color {
+        if game.moveTarget == point { return .blue.opacity(0.45) }
+        if scenario.objective.point == point { return .purple.opacity(0.7) }
+        if scenario.map.protectedCellSet.contains(point) { return .black.opacity(0.42) }
+        let tags = scenario.map.tags(at: point)
+        if tags.contains(.checkpoint) || tags.contains(.base) { return .gray.opacity(0.75) }
+        if tags.contains(.building) { return .brown.opacity(0.6) }
+        if tags.contains(.road) || tags.contains(.lane) { return .gray.opacity(0.35) }
+        if tags.contains(.hedge) || tags.contains(.cover) || tags.contains(.wall) { return .green.opacity(0.45) }
+        if tags.contains(.border) { return .orange.opacity(0.45) }
+        if tags.contains(.river) { return .cyan.opacity(0.45) }
+        if tags.contains(.rail) { return .mint.opacity(0.5) }
+        return .green.opacity(0.18)
     }
 }
 
