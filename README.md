@@ -53,9 +53,11 @@ Cycle 201 starts the playable-game pass. The existing automated path is now trea
 
 Cycles 221-240 add the first manual alpha: Drummuckavall can be started from either side, played through by deterministic smoke runner, inspected with actor details, controlled with move/attack/wait/end-turn/cancel actions, saved locally, resumed, abandoned, and recorded separately from Preview Mode completions. Play Mode now includes side-aware objective text, force comparison, easy/standard/hard AI, board highlights for legal moves and targets, and live event logs.
 
-The bundled catalog currently contains 24 scenarios:
+Cycles 241-260 add the first early-infantry manual beta. All early infantry scenarios can finish from either side through deterministic replay, protected cells remain untargetable, fog of war is explicitly deferred, actor status and turn order are visible, play logs can be filtered without altering raw events, replay seeds can be copied, and a fictional tutorial scenario guides the basic controls.
 
-- 8 early infantry scenarios.
+The bundled catalog currently contains 25 scenarios:
+
+- 9 early infantry/tutorial scenarios.
 - 8 vehicle scenarios.
 - 4 checkpoint/base scenarios.
 - 2 playable aircraft/advanced scenarios.

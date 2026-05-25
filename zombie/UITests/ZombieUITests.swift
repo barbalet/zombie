@@ -59,6 +59,35 @@ final class ZombieUITests: XCTestCase {
         XCTAssertTrue(blockedMessage.waitForExistence(timeout: 8))
     }
 
+    func testTutorialScenarioCompletes() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["zombie"].waitForExistence(timeout: 8))
+
+        let search = app.textFields["Search"].firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 8))
+        search.tap()
+        search.typeText("Play Mode Tutorial")
+
+        let tutorial = app.staticTexts["Play Mode Tutorial"].firstMatch
+        XCTAssertTrue(tutorial.waitForExistence(timeout: 8))
+        tutorial.tap()
+
+        let startGame = app.buttons["Start Game"].firstMatch
+        XCTAssertTrue(startGame.waitForExistence(timeout: 8))
+        startGame.tap()
+
+        XCTAssertTrue(app.staticTexts["Tutorial Steps"].waitForExistence(timeout: 8))
+
+        let completeTutorial = app.buttons["Complete Tutorial"].firstMatch
+        XCTAssertTrue(completeTutorial.waitForExistence(timeout: 8))
+        completeTutorial.tap()
+
+        let completeStatus = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "tutorial complete")).firstMatch
+        XCTAssertTrue(completeStatus.waitForExistence(timeout: 8))
+    }
+
     func testSearchFindsAdvancedScenario() throws {
         let app = XCUIApplication()
         app.launch()

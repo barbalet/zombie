@@ -1,5 +1,13 @@
 import SwiftUI
 
+#if canImport(AppKit)
+import AppKit
+#endif
+
+#if canImport(UIKit)
+import UIKit
+#endif
+
 #if SWIFT_PACKAGE
 import ZombieCore
 #endif
@@ -73,6 +81,35 @@ enum PlayActionMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum PlayLogFilter: String, CaseIterable, Identifiable {
+    case all
+    case movement
+    case attacks
+    case ai
+    case outcome
+
+    var id: String { rawValue }
+
+    var title: String {
+        rawValue.capitalized
+    }
+
+    func includes(_ event: ScenarioEvent) -> Bool {
+        switch self {
+        case .all:
+            return true
+        case .movement:
+            return event.phase.contains("move")
+        case .attacks:
+            return event.phase.contains("attack")
+        case .ai:
+            return event.phase.hasPrefix("ai-")
+        case .outcome:
+            return event.phase == "outcome"
+        }
+    }
+}
+
 final class ZombieAppStore: ObservableObject {
     @Published var catalog = ZombieScenarioCatalog(schemaVersion: 1, scenarios: [])
     @Published var selectedScenarioID: String?
@@ -85,11 +122,13 @@ final class ZombieAppStore: ObservableObject {
     @Published var selectedHumanSide: ForceSide = .player
     @Published var selectedAIDifficulty: PlayableAIDifficulty = .standard
     @Published var selectedPlayAction: PlayActionMode = .move
+    @Published var selectedPlayLogFilter: PlayLogFilter = .all
     @Published var playError: String?
     @Published var validationIssues: [ScenarioValidationIssue] = []
     @Published var status = "Loading scenarios..."
     @Published var completionRecords: [ScenarioCompletionRecord] = []
     @Published var playableCompletionRecords: [PlayableCompletionRecord] = []
+    @Published var earlyReplayResults: [PlayableReplayResult] = []
 
     private let simulator = ZombieSkirmishSimulator()
     private let activeGameSaveKey = "zombie.activeGameSave.v1"
@@ -101,6 +140,7 @@ final class ZombieAppStore: ObservableObject {
             validationIssues = ScenarioCatalog.validate(catalog)
             savedGame = loadSavedGame()
             playableCompletionRecords = loadPlayableCompletionRecords()
+            earlyReplayResults = PlayableGameEngine.runEarlyCorpusReplay(catalog)
             selectedScenarioID = filteredScenarios.first?.id
             if let savedGame {
                 selectedScenarioID = savedGame.scenarioID
@@ -220,6 +260,12 @@ final class ZombieAppStore: ObservableObject {
         }
     }
 
+    func runEarlyReplayCorpus() {
+        earlyReplayResults = PlayableGameEngine.runEarlyCorpusReplay(catalog, difficulty: selectedAIDifficulty)
+        let failures = earlyReplayResults.filter { !$0.passed }
+        status = failures.isEmpty ? "Early replay corpus passed from both sides." : "Early replay corpus has \(failures.count) issue(s)."
+    }
+
     func legalMoves(for scenario: ZombieScenario) -> [GridPoint] {
         guard let activeGame, activeGame.scenarioID == scenario.id, let actorID = activeGame.selectedActorID else {
             return []
@@ -276,6 +322,24 @@ final class ZombieAppStore: ObservableObject {
         endTurn(in: scenario)
     }
 
+    func completeTutorialRun(in scenario: ZombieScenario) {
+        guard scenario.sensitivityTags.contains("fictional-training") else {
+            playError = "Tutorial completion is only available for training scenarios."
+            return
+        }
+        do {
+            let finished = try PlayableGameEngine.runSmokePlaythrough(scenario, humanSide: selectedHumanSide, difficulty: selectedAIDifficulty)
+            activeGame = finished
+            playError = nil
+            upsertPlayableCompletion(for: scenario, game: finished)
+            clearSavedGame()
+            status = "\(scenario.title): tutorial complete."
+        } catch {
+            playError = String(describing: error)
+            status = "\(scenario.title): \(playError ?? "Tutorial blocked")."
+        }
+    }
+
     func resumeSavedGame() {
         guard let savedGame else {
             status = "No saved Play Mode run."
@@ -288,6 +352,21 @@ final class ZombieAppStore: ObservableObject {
         selectedPlayAction = .move
         playError = nil
         status = "\(activeScenario?.title ?? savedGame.scenarioID): Play Mode resumed."
+    }
+
+    func filteredEvents(for game: PlayableGameState) -> [ScenarioEvent] {
+        game.events.filter { selectedPlayLogFilter.includes($0) }
+    }
+
+    func copySeed(_ seed: UInt32) {
+        let seedText = String(seed)
+        #if canImport(UIKit)
+        UIPasteboard.general.string = seedText
+        #elseif canImport(AppKit)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(seedText, forType: .string)
+        #endif
+        status = "Replay seed copied: \(seedText)."
     }
 
     func abandonActiveGame() {
@@ -595,6 +674,12 @@ struct PlaySetupPanelView: View {
                     .font(.headline)
                 Spacer()
                 Button {
+                    store.runEarlyReplayCorpus()
+                } label: {
+                    Label("Replay Early Corpus", systemImage: "arrow.triangle.2.circlepath")
+                }
+
+                Button {
                     store.startSelectedGame()
                 } label: {
                     Label("Start Game", systemImage: "flag.checkered")
@@ -641,9 +726,30 @@ struct PlaySetupPanelView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+
+            HStack {
+                Label(replaySummary, systemImage: store.earlyReplayResults.allSatisfy(\.passed) ? "checkmark.seal" : "exclamationmark.triangle")
+                    .font(.caption)
+                Spacer()
+                Text(PlayableGameEngine.fogOfWarPolicy)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing)
+            }
         }
         .padding(12)
         .background(Color.black.opacity(0.04))
+    }
+
+    private var replaySummary: String {
+        let relevant = store.earlyReplayResults.filter { result in
+            scenario.tier != .early || result.scenarioID == scenario.id
+        }
+        guard !relevant.isEmpty else {
+            return "No early replay results yet."
+        }
+        let passed = relevant.filter(\.passed).count
+        return "Replay \(passed)/\(relevant.count) side runs passed."
     }
 
     private func sideName(_ side: ForceSide) -> String {
@@ -827,17 +933,39 @@ struct PlayModeView: View {
             HStack(alignment: .firstTextBaseline) {
                 Text("Play Mode").font(.headline)
                 Spacer()
-                Text("Turn \(game.turn) - \(game.phase.rawValue) - \(game.difficulty.title) AI")
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 10) {
+                    Text("Turn \(game.turn) - \(game.phase.rawValue) - \(game.difficulty.title) AI")
+                    Text("Seed \(game.seed)")
+                        .monospacedDigit()
+                    Button {
+                        store.copySeed(game.seed)
+                    } label: {
+                        Label("Copy Seed", systemImage: "doc.on.doc")
+                    }
+                    .labelStyle(.iconOnly)
+                }
+                .foregroundStyle(.secondary)
             }
 
             Text(PlayableGameEngine.objectiveBriefing(for: scenario, humanSide: game.humanSide))
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
+            Text("Active Actor: \(selectedActor.map { actorName($0.id) } ?? "None") - Remaining \(game.remainingHumanActorIDs.map(actorName).joined(separator: ", "))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text("Cancel before commit; movement and dice actions are final.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             if let outcome = game.outcome {
                 Text("Outcome: \(outcome)")
                     .fontWeight(.semibold)
+            }
+
+            if scenario.sensitivityTags.contains("fictional-training") {
+                TutorialStepsView(scenario: scenario, game: game)
             }
 
             if let playError = store.playError {
@@ -945,8 +1073,18 @@ struct PlayModeView: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Play Log").font(.subheadline).fontWeight(.semibold)
-                ForEach(game.events.suffix(12)) { event in
+                HStack {
+                    Text("Play Log").font(.subheadline).fontWeight(.semibold)
+                    Spacer()
+                    Picker("Log Filter", selection: $store.selectedPlayLogFilter) {
+                        ForEach(PlayLogFilter.allCases) { filter in
+                            Text(filter.title).tag(filter)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(maxWidth: 420)
+                }
+                ForEach(store.filteredEvents(for: game).suffix(12)) { event in
                     Text("T\(event.turn) \(event.phase): \(event.summary)")
                         .font(.caption)
                         .monospacedDigit()
@@ -985,6 +1123,55 @@ struct PlayModeView: View {
         scenario.forces.first { $0.side == side }?.name ?? side.rawValue.capitalized
     }
 
+}
+
+struct TutorialStepsView: View {
+    @EnvironmentObject private var store: ZombieAppStore
+    let scenario: ZombieScenario
+    let game: PlayableGameState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("Tutorial Steps")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Spacer()
+                Button {
+                    store.completeTutorialRun(in: scenario)
+                } label: {
+                    Label("Complete Tutorial", systemImage: "checkmark.circle")
+                }
+            }
+            Text(stepText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+        }
+        .padding(8)
+        .background(Color.black.opacity(0.04))
+    }
+
+    private var stepText: String {
+        if game.outcome != nil {
+            return "Tutorial complete: review the outcome and play log."
+        }
+        if game.selectedActorID == nil {
+            return "Step 1: choose an actor."
+        }
+        if !game.events.contains(where: { $0.phase == "move" }) {
+            return "Step 2: choose Move and select a highlighted cell."
+        }
+        if !game.events.contains(where: { $0.phase == "attack" }) {
+            return "Step 3: choose Attack when a target is highlighted, or Wait to spend the activation."
+        }
+        if !game.events.contains(where: { $0.phase == "wait" }) {
+            return "Step 4: use Wait with a remaining actor."
+        }
+        if !game.events.contains(where: { $0.phase.hasPrefix("ai-") }) {
+            return "Step 5: end the turn to let AI resolve."
+        }
+        return "Step 6: continue until the outcome appears."
+    }
 }
 
 struct ActorInspectorView: View {

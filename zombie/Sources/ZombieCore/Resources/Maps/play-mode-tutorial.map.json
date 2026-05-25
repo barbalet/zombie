@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "scenarioID": "play-mode-tutorial",
+  "width": 10,
+  "height": 8,
+  "cellYards": 6,
+  "legend": {
+    ".": [
+      "field"
+    ],
+    "#": [
+      "wall"
+    ],
+    "=": [
+      "road"
+    ],
+    "c": [
+      "cover"
+    ],
+    "0": [
+      "road",
+      "cover"
+    ],
+    "1": [
+      "road",
+      "cover",
+      "objective"
+    ],
+    "2": [
+      "cover"
+    ]
+  },
+  "rows": [
+    "##########",
+    "#........#",
+    "#..c..c..#",
+    "#.0==.1..#",
+    "#..c..2..#",
+    "#........#",
+    "#...=....#",
+    "##########"
+  ],
+  "protectedCells": [],
+  "movement": {
+    "defaultCost": 2,
+    "roadCost": 1,
+    "coverCost": 3,
+    "blockedTags": [
+      "wall",
+      "building",
+      "base",
+      "checkpoint",
+      "river",
+      "protected"
+    ],
+    "notes": "Roads and tutorial lanes are fastest; cover slows movement; walls and protected cells block infantry movement."
+  },
+  "notes": "Fictional training lane for selection, movement, attack, wait, and end-turn practice."
+}

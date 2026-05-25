@@ -12,14 +12,14 @@ final class ZombieCoreTests: XCTestCase {
         XCTAssertEqual(catalog.generatedFromPlanCycles, 1...200)
         XCTAssertGreaterThanOrEqual(catalog.scenarios.count, 24)
         XCTAssertTrue(errors.isEmpty, errors.map(\.description).joined(separator: "\n"))
-        XCTAssertGreaterThanOrEqual(catalog.scenarios.filter { $0.tier == .early && $0.playable }.count, 8)
+        XCTAssertGreaterThanOrEqual(catalog.scenarios.filter { $0.tier == .early && $0.playable }.count, 9)
         XCTAssertGreaterThanOrEqual(catalog.scenarios.filter { ($0.tier == .vehicle || $0.tier == .checkpoint) && $0.playable }.count, 10)
         XCTAssertGreaterThanOrEqual(catalog.scenarios.filter { $0.tier == .aircraft && $0.playable }.count, 2)
     }
 
     func testWikipediaSourcesArePresentForPlayableBattles() throws {
         let catalog = try ScenarioCatalog.bundled()
-        for scenario in catalog.scenarios where scenario.playable {
+        for scenario in catalog.scenarios where scenario.playable && !scenario.sensitivityTags.contains("fictional-training") {
             XCTAssertEqual(scenario.source.wikipedia.host(), "en.wikipedia.org", scenario.id)
             XCTAssertFalse(scenario.source.title.isEmpty, scenario.id)
             XCTAssertFalse(scenario.source.notes.isEmpty, scenario.id)
@@ -278,6 +278,37 @@ final class ZombieCoreTests: XCTestCase {
         XCTAssertTrue(opponentRun.events.contains { $0.phase == "outcome" })
     }
 
+    func testPlayableEarlyCorpusReplayCompletesEverySideRun() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let early = catalog.scenarios.filter { $0.playable && $0.tier == .early }
+        let replays = PlayableGameEngine.runEarlyCorpusReplay(catalog, difficulty: .standard)
+        let failures = replays.filter { !$0.passed }
+
+        XCTAssertGreaterThanOrEqual(early.count, 9)
+        XCTAssertEqual(replays.count, early.count * ForceSide.allCases.count)
+        XCTAssertTrue(failures.isEmpty, failures.map { "\($0.scenarioID) \($0.humanSide.rawValue): \($0.outcome)" }.joined(separator: "\n"))
+        XCTAssertTrue(replays.allSatisfy { $0.turns > 1 })
+        XCTAssertTrue(replays.allSatisfy { $0.protectedZoneViolations == 0 })
+        XCTAssertTrue(replays.contains { $0.scenarioID == "play-mode-tutorial" && $0.finished })
+    }
+
+    func testProtectedEarlyScenariosKeepProtectedCellsUntargetable() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let protectedScenarios = catalog.scenarios.filter { $0.tier == .early && $0.sensitivityTags.contains("protected-zone") }
+
+        XCTAssertFalse(protectedScenarios.isEmpty)
+        for scenario in protectedScenarios {
+            for side in ForceSide.allCases {
+                var state = try PlayableGameEngine.start(scenario, humanSide: side)
+                for actor in state.actors where actor.side == side && actor.active {
+                    state.selectedActorID = actor.id
+                    XCTAssertTrue(PlayableGameEngine.legalMoveDestinations(for: actor.id, in: state, scenario: scenario).allSatisfy { !scenario.map.protectedCellSet.contains($0) }, scenario.id)
+                    XCTAssertTrue(PlayableGameEngine.legalAttackTargets(for: actor.id, in: state, scenario: scenario).allSatisfy { !scenario.map.protectedCellSet.contains($0.position) }, scenario.id)
+                }
+            }
+        }
+    }
+
     func testPlayableObjectiveBriefingAndBlockedCommandsExplainState() throws {
         let catalog = try ScenarioCatalog.bundled()
         let scenario = try XCTUnwrap(catalog.scenarios.first { $0.id == "drummuckavall-1975" })
@@ -292,5 +323,19 @@ final class ZombieCoreTests: XCTestCase {
             XCTAssertEqual(String(describing: error), "Actor \(aiActor.id) is controlled by the opponent.")
         }
         XCTAssertFalse(PlayableGameEngine.actorStatus(humanActor).isEmpty)
+    }
+
+    func testFictionalTutorialHasNoHistoricalBattleSource() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let tutorial = try XCTUnwrap(catalog.scenarios.first { $0.id == "play-mode-tutorial" })
+
+        XCTAssertTrue(tutorial.sensitivityTags.contains("fictional-training"))
+        XCTAssertEqual(tutorial.source.wikipedia.host(), "example.com")
+        XCTAssertFalse(tutorial.source.notes.contains("Wikipedia"))
+        XCTAssertTrue(tutorial.scopeWarning.contains("Fictional"))
+
+        let run = try PlayableGameEngine.runSmokePlaythrough(tutorial, humanSide: .player, difficulty: .easy)
+        XCTAssertEqual(run.phase, .finished)
+        XCTAssertNotNil(run.outcome)
     }
 }

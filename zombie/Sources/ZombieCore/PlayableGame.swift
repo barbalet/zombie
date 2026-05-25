@@ -31,6 +31,23 @@ public enum PlayableCommand: Codable, Equatable {
     case endTurn
 }
 
+public struct PlayableReplayResult: Codable, Equatable, Identifiable {
+    public var id: String { "\(scenarioID)-\(humanSide.rawValue)-\(difficulty.rawValue)" }
+    public var scenarioID: String
+    public var humanSide: ForceSide
+    public var difficulty: PlayableAIDifficulty
+    public var finished: Bool
+    public var turns: Int
+    public var eventCount: Int
+    public var outcome: String
+    public var protectedZoneViolations: Int
+    public var blockedAttackEvents: Int
+
+    public var passed: Bool {
+        finished && turns > 1 && protectedZoneViolations == 0
+    }
+}
+
 public enum PlayableGameError: Error, CustomStringConvertible, Equatable {
     case scenarioNotPlayable(String)
     case unsupportedTier(ScenarioTier)
@@ -142,9 +159,18 @@ public struct PlayableGameState: Codable, Equatable, Identifiable {
     public var finished: Bool {
         phase == .finished || outcome != nil
     }
+
+    public var remainingHumanActorIDs: [String] {
+        actors
+            .filter { $0.side == humanSide && $0.active && !$0.acted }
+            .map(\.id)
+            .sorted()
+    }
 }
 
 public enum PlayableGameEngine {
+    public static let fogOfWarPolicy = "Cycle 252 decision: hidden units stay out of scope for cycle 300; Play Mode uses visible actors and deterministic public logs."
+
     public static func start(_ scenario: ZombieScenario, humanSide: ForceSide, difficulty: PlayableAIDifficulty = .standard) throws -> PlayableGameState {
         guard scenario.playable else {
             throw PlayableGameError.scenarioNotPlayable(scenario.id)
@@ -245,6 +271,46 @@ public enum PlayableGameEngine {
             throw PlayableGameError.playthroughLimitReached(maxCommands)
         }
         return state
+    }
+
+    public static func runEarlyCorpusReplay(_ catalog: ZombieScenarioCatalog, difficulty: PlayableAIDifficulty = .standard) -> [PlayableReplayResult] {
+        catalog.scenarios
+            .filter { $0.playable && $0.tier == .early }
+            .sorted { $0.id < $1.id }
+            .flatMap { scenario in
+                ForceSide.allCases.map { side in
+                    replayResult(for: scenario, humanSide: side, difficulty: difficulty)
+                }
+            }
+    }
+
+    public static func replayResult(for scenario: ZombieScenario, humanSide: ForceSide, difficulty: PlayableAIDifficulty = .standard) -> PlayableReplayResult {
+        do {
+            let state = try runSmokePlaythrough(scenario, humanSide: humanSide, difficulty: difficulty)
+            return PlayableReplayResult(
+                scenarioID: scenario.id,
+                humanSide: humanSide,
+                difficulty: difficulty,
+                finished: state.finished,
+                turns: state.turn,
+                eventCount: state.events.count,
+                outcome: state.outcome ?? "unfinished",
+                protectedZoneViolations: protectedZoneViolations(in: state, scenario: scenario),
+                blockedAttackEvents: state.events.filter { $0.phase.contains("attack-blocked") }.count
+            )
+        } catch {
+            return PlayableReplayResult(
+                scenarioID: scenario.id,
+                humanSide: humanSide,
+                difficulty: difficulty,
+                finished: false,
+                turns: 0,
+                eventCount: 0,
+                outcome: String(describing: error),
+                protectedZoneViolations: 0,
+                blockedAttackEvents: 0
+            )
+        }
     }
 
     public static func legalMoveDestinations(for actorID: String, in state: PlayableGameState, scenario: ZombieScenario) -> [GridPoint] {
@@ -532,6 +598,21 @@ public enum PlayableGameEngine {
 
     private static func sideName(_ side: ForceSide, in scenario: ZombieScenario) -> String {
         scenario.forces.first { $0.side == side }.map { "\($0.name) \($0.unit)" } ?? side.rawValue
+    }
+
+    private static func protectedZoneViolations(in state: PlayableGameState, scenario: ZombieScenario) -> Int {
+        let protectedCells = scenario.map.protectedCellSet
+        let actorByName = Dictionary(uniqueKeysWithValues: scenario.actors.map { ($0.name, $0.id) })
+        return state.events.filter { event in
+            guard event.phase.contains("attack"),
+                  let actorID = actorByName[event.actor],
+                  let targetID = actorByName[event.target],
+                  let actor = state.actors.first(where: { $0.id == actorID }),
+                  let target = state.actors.first(where: { $0.id == targetID }) else {
+                return false
+            }
+            return protectedCells.contains(actor.position) || protectedCells.contains(target.position)
+        }.count
     }
 
     private static func targetScore(_ target: PlayableActorState, for actor: PlayableActorState, difficulty: PlayableAIDifficulty) -> Int {

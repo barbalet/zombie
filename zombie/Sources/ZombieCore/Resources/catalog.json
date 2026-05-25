@@ -282,6 +282,45 @@
     },
     {
       "schemaVersion": 1,
+      "id": "play-mode-tutorial",
+      "title": "Play Mode Tutorial",
+      "date": "2026-05-25",
+      "place": "Fictional training ground",
+      "tier": "early",
+      "playable": true,
+      "forces": [
+        { "id": "training-blue", "name": "Blue Training Team", "side": "player", "unit": "Tutorial cell", "sourceNote": "Fictional tutorial force for learning controls." },
+        { "id": "training-red", "name": "Red Training Team", "side": "opponent", "unit": "Tutorial cell", "sourceNote": "Fictional tutorial force for learning controls." }
+      ],
+      "actors": [
+        { "id": "blue-rifle", "name": "Blue Rifle", "side": "player", "role": "rifleman", "position": { "x": 2, "y": 3 }, "weapon": "rifle", "stats": { "RE": 6, "IR": 5, "AP": 5, "PH": 7, "ME": 6 }, "skills": ["firearm_basic", "in_cover"], "sourceNote": "Tutorial actor for movement and attack controls." },
+        { "id": "blue-scout", "name": "Blue Scout", "side": "player", "role": "scout", "position": { "x": 3, "y": 3 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 6, "AP": 6, "PH": 6, "ME": 6 }, "skills": ["evade"], "sourceNote": "Tutorial actor for wait and end-turn controls." },
+        { "id": "red-sentry", "name": "Red Sentry", "side": "opponent", "role": "sentry", "position": { "x": 6, "y": 3 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 5, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Fictional opposing actor." },
+        { "id": "red-support", "name": "Red Support", "side": "opponent", "role": "support", "position": { "x": 6, "y": 4 }, "weapon": "rifle", "stats": { "RE": 5, "IR": 4, "AP": 4, "PH": 6, "ME": 5 }, "skills": ["firearm_basic"], "sourceNote": "Fictional opposing actor." }
+      ],
+      "map": {
+        "width": 10,
+        "height": 8,
+        "cellYards": 6,
+        "cells": [
+          { "point": { "x": 2, "y": 3 }, "tags": ["road", "cover"] },
+          { "point": { "x": 3, "y": 3 }, "tags": ["road"] },
+          { "point": { "x": 6, "y": 3 }, "tags": ["road", "cover", "objective"] },
+          { "point": { "x": 6, "y": 4 }, "tags": ["cover"] }
+        ],
+        "protectedCells": [],
+        "notes": "Fictional training lane for movement, attack, wait, and end-turn controls."
+      },
+      "objective": { "kind": "training", "point": { "x": 6, "y": 3 }, "description": "The selected side practices movement, attack, wait, and end-turn controls until one training team controls the lane.", "turnLimit": 6 },
+      "mechanics": { "vehicles": [], "explosives": [], "checkpoints": [], "phases": ["select", "move", "attack", "wait", "end_turn"] },
+      "source": { "title": "Fictional Play Mode tutorial", "wikipedia": "https://example.com/zombie-play-mode-tutorial", "accessed": "2026-05-25", "confidence": "high", "notes": "Fictional tutorial created for controls; not a historical event." },
+      "sensitivityTags": ["fictional-training", "tutorial", "two-force", "bounded"],
+      "scopeWarning": "Fictional training scenario; no real-world casualty event is represented.",
+      "collections": ["all", "early", "tutorial"],
+      "implementationNotes": "Created for cycle 258-259 tutorial controls and excluded from historical battle source expectations."
+    },
+    {
+      "schemaVersion": 1,
       "id": "dungiven-1972",
       "title": "Dungiven Landmine and Gun Attack",
       "date": "1972-06-24",

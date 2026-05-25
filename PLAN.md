@@ -339,6 +339,12 @@ Cycles 221-240 have been run into the first manual alpha:
 - Drummuckavall is the manual alpha scenario and completes from either side through the smoke runner.
 - Execution notes are recorded in [zombie/docs/cycles-221-240-execution.md](zombie/docs/cycles-221-240-execution.md).
 
+Cycles 241-260 have been run into the first early-infantry manual beta:
+
+- All early infantry scenarios, plus a fictional Play Mode Tutorial, complete from either side through deterministic replay.
+- Protected cells remain untargetable, no early side-run ends on turn 1, fog of war is explicitly deferred, actor status/turn order/log filters/replay seed/undo policy are visible in Play Mode, and tutorial completion is covered by UI smoke.
+- Execution notes are recorded in [zombie/docs/cycles-241-260-execution.md](zombie/docs/cycles-241-260-execution.md).
+
 | Cycle | Work | Goal | Acceptance |
 |---:|---|---|---|
 | 201 | Current-state correction | Rename the existing automated path as Preview Mode. | README and release notes distinguish Preview Mode from Play Mode. |
