@@ -1,0 +1,3 @@
+[submodule "foc"]
+	path = foc
+	url = git@github.com:barbalet/fieldofchaos.git
