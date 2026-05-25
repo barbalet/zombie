@@ -51,6 +51,8 @@ The first 200-cycle implementation now includes a local SwiftPM workspace and `z
 
 Cycle 201 starts the playable-game pass. The existing automated path is now treated as **Preview Mode**: it runs deterministic scenario playback for validation, demonstrations, and regression checks. The new **Play Mode** path is being added beside it so a user can choose a side and step through a scenario manually.
 
+Cycles 221-240 add the first manual alpha: Drummuckavall can be started from either side, played through by deterministic smoke runner, inspected with actor details, controlled with move/attack/wait/end-turn/cancel actions, saved locally, resumed, abandoned, and recorded separately from Preview Mode completions. Play Mode now includes side-aware objective text, force comparison, easy/standard/hard AI, board highlights for legal moves and targets, and live event logs.
+
 The bundled catalog currently contains 24 scenarios:
 
 - 8 early infantry scenarios.

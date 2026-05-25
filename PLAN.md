@@ -333,6 +333,12 @@ Cycles 201-220 have been run into the first Play Mode spine:
 - Tests cover side selection, Codable state round-trip, legal movement, AI turn advancement, and Field of Chaos-backed attacks.
 - Execution notes are recorded in [zombie/docs/cycles-201-220-execution.md](zombie/docs/cycles-201-220-execution.md).
 
+Cycles 221-240 have been run into the first manual alpha:
+
+- Outcome text, a complete Drummuckavall smoke playthrough, actor inspection, action controls, move/target highlights, live play log, keyboard commands, blocked-action messages, save/resume, reset, manual completion records, side comparison, objective copy, AI difficulty, and scored AI movement are implemented.
+- Drummuckavall is the manual alpha scenario and completes from either side through the smoke runner.
+- Execution notes are recorded in [zombie/docs/cycles-221-240-execution.md](zombie/docs/cycles-221-240-execution.md).
+
 | Cycle | Work | Goal | Acceptance |
 |---:|---|---|---|
 | 201 | Current-state correction | Rename the existing automated path as Preview Mode. | README and release notes distinguish Preview Mode from Play Mode. |

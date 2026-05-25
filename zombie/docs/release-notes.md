@@ -13,11 +13,12 @@ This demo candidate includes a Mac Catalyst app, deterministic scenario catalog,
 - Deterministic regression simulator for infantry, vehicle/checkpoint, aircraft, and indirect-fire abstractions.
 - Preview Mode for automated deterministic playback.
 - Initial Play Mode spine for early infantry scenarios with side selection, manual commands, and deterministic AI stepping.
+- Manual alpha Play Mode for Drummuckavall with actor inspection, action controls, board highlights, save/resume, reset, manual completion records, side comparison, side-aware objectives, and AI difficulty.
 - Unit, UI, regression, packaging, and diagnostics scripts.
 
 ## Known Limits
 
-- Preview Mode remains the complete automated path; Play Mode is in active development and currently targets early infantry scenarios first.
+- Preview Mode remains the complete automated path; Play Mode is in active development and currently has Drummuckavall as the polished manual alpha.
 - Aircraft and mortar events are abstract timing systems only.
 - Screenshot baselines are documented but not yet stored as image snapshots.
 - Packaged app signing is local debug signing only.

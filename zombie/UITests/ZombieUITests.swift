@@ -43,6 +43,20 @@ final class ZombieUITests: XCTestCase {
 
         let playModeStarted = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Play Mode started")).firstMatch
         XCTAssertTrue(playModeStarted.waitForExistence(timeout: 8))
+
+        XCTAssertTrue(app.staticTexts["Actor Inspector"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Weapon")).firstMatch.exists)
+
+        let cancel = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(cancel.waitForExistence(timeout: 8))
+        cancel.tap()
+
+        let attack = app.buttons["Attack"].firstMatch
+        XCTAssertTrue(attack.waitForExistence(timeout: 8))
+        attack.tap()
+
+        let blockedMessage = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Select an actor")).firstMatch
+        XCTAssertTrue(blockedMessage.waitForExistence(timeout: 8))
     }
 
     func testSearchFindsAdvancedScenario() throws {

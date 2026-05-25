@@ -12,6 +12,18 @@ public enum PlayableGamePhase: String, Codable, Equatable, CaseIterable {
     case finished
 }
 
+public enum PlayableAIDifficulty: String, Codable, Equatable, CaseIterable, Identifiable {
+    case easy
+    case standard
+    case hard
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        rawValue.capitalized
+    }
+}
+
 public enum PlayableCommand: Codable, Equatable {
     case move(actorID: String, destination: GridPoint)
     case attack(actorID: String, targetID: String)
@@ -29,6 +41,7 @@ public enum PlayableGameError: Error, CustomStringConvertible, Equatable {
     case invalidPhase(PlayableGamePhase)
     case illegalMove(String)
     case illegalAttack(String)
+    case playthroughLimitReached(Int)
 
     public var description: String {
         switch self {
@@ -48,6 +61,8 @@ public enum PlayableGameError: Error, CustomStringConvertible, Equatable {
             return "Cannot perform that command during \(phase.rawValue)."
         case .illegalMove(let reason), .illegalAttack(let reason):
             return reason
+        case .playthroughLimitReached(let limit):
+            return "Manual smoke playthrough did not finish within \(limit) commands."
         }
     }
 }
@@ -109,6 +124,8 @@ public struct PlayableGameState: Codable, Equatable, Identifiable {
     public var schemaVersion: Int
     public var scenarioID: String
     public var humanSide: ForceSide
+    public var difficulty: PlayableAIDifficulty
+    public var seed: UInt32
     public var turn: Int
     public var phase: PlayableGamePhase
     public var actors: [PlayableActorState]
@@ -128,13 +145,14 @@ public struct PlayableGameState: Codable, Equatable, Identifiable {
 }
 
 public enum PlayableGameEngine {
-    public static func start(_ scenario: ZombieScenario, humanSide: ForceSide) throws -> PlayableGameState {
+    public static func start(_ scenario: ZombieScenario, humanSide: ForceSide, difficulty: PlayableAIDifficulty = .standard) throws -> PlayableGameState {
         guard scenario.playable else {
             throw PlayableGameError.scenarioNotPlayable(scenario.id)
         }
         guard scenario.tier == .early else {
             throw PlayableGameError.unsupportedTier(scenario.tier)
         }
+        let seed = stableSeed(for: scenario.id, actorID: "\(humanSide.rawValue)-\(difficulty.rawValue)", index: 0)
 
         let actorStates = scenario.actors.enumerated().map { index, actor in
             let character = FieldOfChaosAdapter.makeCharacter(from: actor, seed: stableSeed(for: scenario.id, actorID: actor.id, index: index))
@@ -153,9 +171,11 @@ public enum PlayableGameEngine {
         }
 
         return PlayableGameState(
-            schemaVersion: 1,
+            schemaVersion: 2,
             scenarioID: scenario.id,
             humanSide: humanSide,
+            difficulty: difficulty,
+            seed: seed,
             turn: 1,
             phase: .humanActivation,
             actors: actorStates,
@@ -169,11 +189,62 @@ public enum PlayableGameEngine {
                     phase: "play-start",
                     actor: sideName(humanSide, in: scenario),
                     target: scenario.title,
-                    summary: "Play Mode started as \(sideName(humanSide, in: scenario))."
+                    summary: "Play Mode started as \(sideName(humanSide, in: scenario)) on \(difficulty.title) AI."
                 )
             ],
             outcome: nil
         )
+    }
+
+    public static func objectiveBriefing(for scenario: ZombieScenario, humanSide: ForceSide) -> String {
+        "As \(sideName(humanSide, in: scenario)), objective: \(scenario.objective.description)"
+    }
+
+    public static func actorStatus(_ actor: PlayableActorState) -> String {
+        if actor.dead { return "Dead" }
+        if actor.unconscious { return "Unconscious" }
+        if actor.acted { return "Acted" }
+        return "Active"
+    }
+
+    public static func forceSummary(for side: ForceSide, in scenario: ZombieScenario) -> String {
+        let force = scenario.forces.first { $0.side == side }
+        let actors = scenario.actors.filter { $0.side == side }
+        let weapons = Set(actors.map { displayName($0.weapon.rawValue) }).sorted().joined(separator: ", ")
+        let name = force.map { "\($0.name) - \($0.unit)" } ?? side.rawValue.capitalized
+        return "\(name): \(actors.count) actors; \(weapons.isEmpty ? "no weapons listed" : weapons)."
+    }
+
+    public static func runSmokePlaythrough(_ scenario: ZombieScenario, humanSide: ForceSide, difficulty: PlayableAIDifficulty = .standard, maxCommands: Int = 200) throws -> PlayableGameState {
+        var state = try start(scenario, humanSide: humanSide, difficulty: difficulty)
+        var commandCount = 0
+
+        while !state.finished && commandCount < maxCommands {
+            let actorIDs = state.actors
+                .filter { $0.side == state.humanSide && $0.active && !$0.acted }
+                .map(\.id)
+                .sorted()
+
+            guard let actorID = actorIDs.first else {
+                state = try applying(.endTurn, to: state, scenario: scenario)
+                commandCount += 1
+                continue
+            }
+
+            if let target = legalAttackTargets(for: actorID, in: state, scenario: scenario).first {
+                state = try applying(.attack(actorID: actorID, targetID: target.id), to: state, scenario: scenario)
+            } else if let destination = preferredHumanMove(for: actorID, in: state, scenario: scenario) {
+                state = try applying(.move(actorID: actorID, destination: destination), to: state, scenario: scenario)
+            } else {
+                state = try applying(.wait(actorID: actorID), to: state, scenario: scenario)
+            }
+            commandCount += 1
+        }
+
+        guard state.finished else {
+            throw PlayableGameError.playthroughLimitReached(maxCommands)
+        }
+        return state
     }
 
     public static func legalMoveDestinations(for actorID: String, in state: PlayableGameState, scenario: ZombieScenario) -> [GridPoint] {
@@ -337,6 +408,10 @@ public enum PlayableGameEngine {
     }
 
     private static func canAttack(_ actor: PlayableActorState, target: PlayableActorState, state: PlayableGameState, scenario: ZombieScenario) -> Bool {
+        guard !scenario.map.protectedCellSet.contains(actor.position),
+              !scenario.map.protectedCellSet.contains(target.position) else {
+            return false
+        }
         guard let actorScenario = scenario.actors.first(where: { $0.id == actor.id }),
               let targetScenario = scenario.actors.first(where: { $0.id == target.id }) else {
             return false
@@ -355,30 +430,56 @@ public enum PlayableGameEngine {
         return state.actors
             .filter { $0.side != actor.side && $0.active }
             .filter { canAttack(actor, target: $0, state: state, scenario: scenario) }
-            .sorted { $0.position.distance(to: actor.position) < $1.position.distance(to: actor.position) }
+            .sorted { left, right in
+                let leftScore = targetScore(left, for: actor, difficulty: state.difficulty)
+                let rightScore = targetScore(right, for: actor, difficulty: state.difficulty)
+                if leftScore == rightScore {
+                    return left.id < right.id
+                }
+                return leftScore > rightScore
+            }
     }
 
     private static func nextAIMove(for actorID: String, in state: PlayableGameState, scenario: ZombieScenario) -> GridPoint? {
-        guard let actor = state.actors.first(where: { $0.id == actorID }),
-              let target = state.actors.filter({ $0.side != actor.side && $0.active }).min(by: { left, right in
-                  actor.position.distance(to: left.position) < actor.position.distance(to: right.position)
-              }) else {
+        guard let actor = state.actors.first(where: { $0.id == actorID }) else {
             return nil
         }
-        return nextStep(from: actor.position, toward: target.position, actorID: actorID, in: state, scenario: scenario)
+        return scoredMove(from: actor.position, actorID: actorID, side: actor.side, in: state, scenario: scenario, difficulty: state.difficulty)
     }
 
-    private static func nextStep(from start: GridPoint, toward target: GridPoint, actorID: String, in state: PlayableGameState, scenario: ZombieScenario) -> GridPoint? {
+    private static func scoredMove(from start: GridPoint, actorID: String, side: ForceSide, in state: PlayableGameState, scenario: ZombieScenario, difficulty: PlayableAIDifficulty) -> GridPoint? {
         let occupied = Set(state.actors.filter { $0.id != actorID && $0.active }.map(\.position))
+        let enemies = state.actors.filter { $0.side != side && $0.active }
+        guard !enemies.isEmpty else {
+            return nil
+        }
+
         return neighbors(of: start, in: scenario.map)
             .filter { scenario.map.movementCost(at: $0) != nil && !occupied.contains($0) }
             .sorted { left, right in
-                let leftDistance = left.distance(to: target)
-                let rightDistance = right.distance(to: target)
-                if leftDistance == rightDistance {
+                let leftScore = moveScore(left, enemies: enemies, scenario: scenario, difficulty: difficulty)
+                let rightScore = moveScore(right, enemies: enemies, scenario: scenario, difficulty: difficulty)
+                if leftScore == rightScore {
                     return left.id < right.id
                 }
-                return leftDistance < rightDistance
+                return leftScore > rightScore
+            }
+            .first
+    }
+
+    private static func preferredHumanMove(for actorID: String, in state: PlayableGameState, scenario: ZombieScenario) -> GridPoint? {
+        guard let actor = state.actors.first(where: { $0.id == actorID }) else {
+            return nil
+        }
+        let enemies = state.actors.filter { $0.side != actor.side && $0.active }
+        return legalMoveDestinations(for: actorID, in: state, scenario: scenario)
+            .sorted { left, right in
+                let leftScore = moveScore(left, enemies: enemies, scenario: scenario, difficulty: .standard)
+                let rightScore = moveScore(right, enemies: enemies, scenario: scenario, difficulty: .standard)
+                if leftScore == rightScore {
+                    return left.id < right.id
+                }
+                return leftScore > rightScore
             }
             .first
     }
@@ -396,15 +497,21 @@ public enum PlayableGameEngine {
 
         let outcome: String
         if humanActive && !aiActive {
-            outcome = "human force active"
+            outcome = "\(sideName(state.humanSide, in: scenario)) holds the field"
         } else if aiActive && !humanActive {
-            outcome = "ai force active"
+            outcome = "\(sideName(state.aiSide, in: scenario)) holds the field"
         } else if !humanActive && !aiActive {
-            outcome = "both forces down"
+            outcome = "Both forces unable to continue"
         } else {
             let humanDistance = state.actors.filter { $0.side == state.humanSide && $0.active }.map { $0.position.distance(to: scenario.objective.point) }.min() ?? Int.max
             let aiDistance = state.actors.filter { $0.side == state.aiSide && $0.active }.map { $0.position.distance(to: scenario.objective.point) }.min() ?? Int.max
-            outcome = humanDistance <= aiDistance ? "human objective" : "ai objective"
+            if humanDistance == aiDistance {
+                outcome = "Draw at objective distance \(humanDistance)"
+            } else if humanDistance < aiDistance {
+                outcome = "\(sideName(state.humanSide, in: scenario)) closest to objective"
+            } else {
+                outcome = "\(sideName(state.aiSide, in: scenario)) closest to objective"
+            }
         }
 
         state.outcome = outcome
@@ -425,6 +532,39 @@ public enum PlayableGameEngine {
 
     private static func sideName(_ side: ForceSide, in scenario: ZombieScenario) -> String {
         scenario.forces.first { $0.side == side }.map { "\($0.name) \($0.unit)" } ?? side.rawValue
+    }
+
+    private static func targetScore(_ target: PlayableActorState, for actor: PlayableActorState, difficulty: PlayableAIDifficulty) -> Int {
+        let distanceScore = max(0, 20 - actor.position.distance(to: target.position))
+        let vulnerability = 12 - target.wounds.total
+        switch difficulty {
+        case .easy:
+            return distanceScore
+        case .standard:
+            return distanceScore * 2 + vulnerability
+        case .hard:
+            return distanceScore * 3 + vulnerability * 2 + (target.acted ? 2 : 0)
+        }
+    }
+
+    private static func moveScore(_ point: GridPoint, enemies: [PlayableActorState], scenario: ZombieScenario, difficulty: PlayableAIDifficulty) -> Int {
+        let enemyDistance = enemies.map { point.distance(to: $0.position) }.min() ?? 0
+        let objectiveDistance = point.distance(to: scenario.objective.point)
+        let coverBonus = scenario.map.coverCells.contains(point) ? 3 : 0
+        let movementPenalty = scenario.map.movementCost(at: point) ?? 9
+
+        switch difficulty {
+        case .easy:
+            return -enemyDistance
+        case .standard:
+            return -enemyDistance * 2 - objectiveDistance + coverBonus - movementPenalty
+        case .hard:
+            return -enemyDistance * 3 - objectiveDistance * 2 + coverBonus * 2 - movementPenalty
+        }
+    }
+
+    private static func displayName(_ rawValue: String) -> String {
+        rawValue.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
     private static func appendEvent(_ state: inout PlayableGameState, phase: String, actor: String, target: String, summary: String) {

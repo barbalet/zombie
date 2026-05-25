@@ -38,6 +38,48 @@ public struct ScenarioCompletionRecord: Codable, Equatable, Identifiable {
     }
 }
 
+public struct PlayableGameSave: Codable, Equatable, Identifiable {
+    public var id: String { state.scenarioID }
+    public var schemaVersion: Int
+    public var savedAt: Date
+    public var state: PlayableGameState
+
+    public init(state: PlayableGameState, savedAt: Date = Date()) {
+        self.schemaVersion = 1
+        self.savedAt = savedAt
+        self.state = state
+    }
+}
+
+public struct PlayableCompletionRecord: Codable, Equatable, Identifiable {
+    public var id: String { "\(scenarioID)-\(humanSide.rawValue)-\(difficulty.rawValue)" }
+    public var scenarioID: String
+    public var humanSide: ForceSide
+    public var difficulty: PlayableAIDifficulty
+    public var lastOutcome: String
+    public var lastSeed: UInt32
+    public var completedRuns: Int
+    public var updatedAt: Date
+
+    public init(
+        scenarioID: String,
+        humanSide: ForceSide,
+        difficulty: PlayableAIDifficulty,
+        lastOutcome: String,
+        lastSeed: UInt32,
+        completedRuns: Int,
+        updatedAt: Date
+    ) {
+        self.scenarioID = scenarioID
+        self.humanSide = humanSide
+        self.difficulty = difficulty
+        self.lastOutcome = lastOutcome
+        self.lastSeed = lastSeed
+        self.completedRuns = completedRuns
+        self.updatedAt = updatedAt
+    }
+}
+
 public struct ZombieAppSettings: Codable, Equatable {
     public var showAdvancedScenarios: Bool
     public var showSourcePanels: Bool

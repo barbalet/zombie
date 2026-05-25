@@ -243,4 +243,54 @@ final class ZombieCoreTests: XCTestCase {
         XCTAssertTrue(after.events.contains { $0.phase == "attack" })
         XCTAssertLessThan(after.actors.first { $0.id == actorID }?.roundsInClip ?? Int.max, state.actors.first { $0.id == actorID }?.roundsInClip ?? 0)
     }
+
+    func testPlayableSaveRestoresMidTurnDifficultyAndSeed() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let scenario = try XCTUnwrap(catalog.scenarios.first { $0.id == "drummuckavall-1975" })
+        var state = try PlayableGameEngine.start(scenario, humanSide: .opponent, difficulty: .hard)
+        let actorID = try XCTUnwrap(state.selectedActorID)
+        let destination = try XCTUnwrap(PlayableGameEngine.legalMoveDestinations(for: actorID, in: state, scenario: scenario).first)
+
+        state = try PlayableGameEngine.applying(.move(actorID: actorID, destination: destination), to: state, scenario: scenario)
+        let save = PlayableGameSave(state: state, savedAt: Date(timeIntervalSince1970: 1_800_000_000))
+        let data = try JSONEncoder().encode(save)
+        let restored = try JSONDecoder().decode(PlayableGameSave.self, from: data)
+
+        XCTAssertEqual(restored.state, state)
+        XCTAssertEqual(restored.state.difficulty, .hard)
+        XCTAssertEqual(restored.state.humanSide, .opponent)
+        XCTAssertEqual(restored.state.seed, state.seed)
+        XCTAssertEqual(restored.state.events.last?.phase, "move")
+    }
+
+    func testPlayableSmokeCompletesDrummuckavallFromBothSides() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let scenario = try XCTUnwrap(catalog.scenarios.first { $0.id == "drummuckavall-1975" })
+
+        let playerRun = try PlayableGameEngine.runSmokePlaythrough(scenario, humanSide: .player, difficulty: .standard)
+        let opponentRun = try PlayableGameEngine.runSmokePlaythrough(scenario, humanSide: .opponent, difficulty: .standard)
+
+        XCTAssertEqual(playerRun.phase, .finished)
+        XCTAssertEqual(opponentRun.phase, .finished)
+        XCTAssertNotNil(playerRun.outcome)
+        XCTAssertNotNil(opponentRun.outcome)
+        XCTAssertTrue(playerRun.events.contains { $0.phase == "outcome" })
+        XCTAssertTrue(opponentRun.events.contains { $0.phase == "outcome" })
+    }
+
+    func testPlayableObjectiveBriefingAndBlockedCommandsExplainState() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let scenario = try XCTUnwrap(catalog.scenarios.first { $0.id == "drummuckavall-1975" })
+        let state = try PlayableGameEngine.start(scenario, humanSide: .opponent, difficulty: .easy)
+        let opponentForce = try XCTUnwrap(scenario.forces.first { $0.side == .opponent })
+        let humanActor = try XCTUnwrap(state.actors.first { $0.side == .opponent && $0.active })
+        let aiActor = try XCTUnwrap(state.actors.first { $0.side == .player && $0.active })
+
+        XCTAssertTrue(PlayableGameEngine.objectiveBriefing(for: scenario, humanSide: .opponent).contains(opponentForce.name))
+        XCTAssertEqual(state.difficulty, .easy)
+        XCTAssertThrowsError(try PlayableGameEngine.applying(.wait(actorID: aiActor.id), to: state, scenario: scenario)) { error in
+            XCTAssertEqual(String(describing: error), "Actor \(aiActor.id) is controlled by the opponent.")
+        }
+        XCTAssertFalse(PlayableGameEngine.actorStatus(humanActor).isEmpty)
+    }
 }
