@@ -118,6 +118,7 @@ final class ZombieAppStore: ObservableObject {
     @Published var searchText = ""
     @Published var result: RegressionResult?
     @Published var activeGame: PlayableGameState?
+    @Published var activeAbstractGame: AbstractPlayableGameState?
     @Published var savedGame: PlayableGameState?
     @Published var selectedHumanSide: ForceSide = .player
     @Published var selectedAIDifficulty: PlayableAIDifficulty = .standard
@@ -132,6 +133,7 @@ final class ZombieAppStore: ObservableObject {
 
     private let simulator = ZombieSkirmishSimulator()
     private let activeGameSaveKey = "zombie.activeGameSave.v1"
+    private let activeGameBackupSaveKey = "zombie.activeGameSave.backup.v1"
     private let playableCompletionRecordsKey = "zombie.playableCompletionRecords.v1"
 
     init() {
@@ -198,12 +200,25 @@ final class ZombieAppStore: ObservableObject {
             status = "No scenario selected."
             return
         }
+        let availability = ScenarioPlayAvailability.forScenario(selectedScenario)
+        guard availability.allowsPlayMode else {
+            playError = "\(selectedScenario.title) is \(availability.title.lowercased()) content and cannot be started in Play Mode."
+            status = "\(selectedScenario.title): \(playError ?? "Play Mode unavailable")."
+            return
+        }
         do {
-            activeGame = try PlayableGameEngine.start(selectedScenario, humanSide: selectedHumanSide, difficulty: selectedAIDifficulty)
+            if selectedScenario.tier == .early {
+                activeGame = try PlayableGameEngine.start(selectedScenario, humanSide: selectedHumanSide, difficulty: selectedAIDifficulty)
+                activeAbstractGame = nil
+                persistActiveGame()
+            } else {
+                activeAbstractGame = try PlayableAbstractEngine.start(selectedScenario, humanSide: selectedHumanSide, difficulty: selectedAIDifficulty)
+                activeGame = nil
+                clearSavedGame()
+            }
             result = nil
             selectedPlayAction = .move
             playError = nil
-            persistActiveGame()
             status = "\(selectedScenario.title): Play Mode started."
         } catch {
             playError = String(describing: error)
@@ -303,6 +318,10 @@ final class ZombieAppStore: ObservableObject {
     }
 
     func waitSelectedActorInActiveGame() {
+        if let activeAbstractGame, let scenario = catalog.scenarios.first(where: { $0.id == activeAbstractGame.scenarioID }) {
+            applyAbstract(.hold, in: scenario)
+            return
+        }
         guard let scenario = activeScenario else {
             playError = "Start or resume Play Mode before waiting."
             return
@@ -315,6 +334,10 @@ final class ZombieAppStore: ObservableObject {
     }
 
     func endTurnInActiveGame() {
+        if let activeAbstractGame, let scenario = catalog.scenarios.first(where: { $0.id == activeAbstractGame.scenarioID }) {
+            applyAbstract(.resolve, in: scenario)
+            return
+        }
         guard let scenario = activeScenario else {
             playError = "Start or resume Play Mode before ending the turn."
             return
@@ -346,6 +369,7 @@ final class ZombieAppStore: ObservableObject {
             return
         }
         activeGame = savedGame
+        activeAbstractGame = nil
         selectedScenarioID = savedGame.scenarioID
         selectedHumanSide = savedGame.humanSide
         selectedAIDifficulty = savedGame.difficulty
@@ -359,27 +383,94 @@ final class ZombieAppStore: ObservableObject {
     }
 
     func copySeed(_ seed: UInt32) {
-        let seedText = String(seed)
+        copyText(String(seed))
+        status = "Replay seed copied: \(seed)."
+    }
+
+    func copyPlayLogExport(for scenario: ZombieScenario) {
+        do {
+            let export: String
+            if let game = activeGame, game.scenarioID == scenario.id {
+                export = try PlayableLogExporter.jsonLines(for: game, scenario: scenario)
+            } else if let game = activeAbstractGame, game.scenarioID == scenario.id {
+                export = try PlayableLogExporter.jsonLines(for: game, scenario: scenario)
+            } else {
+                playError = "Start Play Mode before exporting a log."
+                return
+            }
+            copyText(export)
+            status = "\(scenario.title): play log copied as JSONL."
+        } catch {
+            playError = "Could not export Play Mode log."
+            status = "\(scenario.title): \(playError ?? "Export failed")."
+        }
+    }
+
+    func copyPlaySummary(for scenario: ZombieScenario) {
+        let summary: String
+        if let game = activeGame, game.scenarioID == scenario.id {
+            summary = PlayableLogExporter.summary(for: game, scenario: scenario)
+        } else if let game = activeAbstractGame, game.scenarioID == scenario.id {
+            summary = PlayableLogExporter.summary(for: game, scenario: scenario)
+        } else {
+            playError = "Start Play Mode before exporting a summary."
+            return
+        }
+        copyText(summary)
+        status = "\(scenario.title): play summary copied."
+    }
+
+    private func copyText(_ text: String) {
         #if canImport(UIKit)
-        UIPasteboard.general.string = seedText
+        UIPasteboard.general.string = text
         #elseif canImport(AppKit)
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(seedText, forType: .string)
+        NSPasteboard.general.setString(text, forType: .string)
         #endif
-        status = "Replay seed copied: \(seedText)."
     }
 
     func abandonActiveGame() {
-        guard let activeGame else {
+        if let activeGame {
+            let scenarioTitle = catalog.scenarios.first { $0.id == activeGame.scenarioID }?.title ?? activeGame.scenarioID
+            self.activeGame = nil
+            selectedPlayAction = .move
+            playError = nil
+            clearSavedGame()
+            status = "\(scenarioTitle): Play Mode abandoned."
+            return
+        }
+
+        guard let activeAbstractGame else {
             status = "No active Play Mode run."
             return
         }
-        let scenarioTitle = catalog.scenarios.first { $0.id == activeGame.scenarioID }?.title ?? activeGame.scenarioID
-        self.activeGame = nil
+        let scenarioTitle = catalog.scenarios.first { $0.id == activeAbstractGame.scenarioID }?.title ?? activeAbstractGame.scenarioID
+        self.activeAbstractGame = nil
         selectedPlayAction = .move
         playError = nil
-        clearSavedGame()
         status = "\(scenarioTitle): Play Mode abandoned."
+    }
+
+    func applyAbstract(_ command: AbstractPlayableCommand, in scenario: ZombieScenario) {
+        guard let activeAbstractGame else {
+            return
+        }
+        do {
+            let hadOutcome = activeAbstractGame.outcome != nil
+            self.activeAbstractGame = try PlayableAbstractEngine.applying(command, to: activeAbstractGame, scenario: scenario)
+            playError = nil
+            if let outcome = self.activeAbstractGame?.outcome {
+                if !hadOutcome, let game = self.activeAbstractGame {
+                    upsertPlayableCompletion(for: scenario, abstractGame: game)
+                }
+                status = "\(scenario.title): \(outcome)."
+            } else {
+                status = "\(scenario.title): Abstract Play Mode turn \(self.activeAbstractGame?.turn ?? 1)."
+            }
+        } catch {
+            playError = String(describing: error)
+            status = "\(scenario.title): \(playError ?? "Command blocked")."
+        }
     }
 
     private func apply(_ command: PlayableCommand, in scenario: ZombieScenario) {
@@ -466,6 +557,26 @@ final class ZombieAppStore: ObservableObject {
         persistPlayableCompletionRecords()
     }
 
+    private func upsertPlayableCompletion(for scenario: ZombieScenario, abstractGame: AbstractPlayableGameState) {
+        guard let outcome = abstractGame.outcome else {
+            return
+        }
+        let id = "\(scenario.id)-\(abstractGame.humanSide.rawValue)-\(abstractGame.difficulty.rawValue)"
+        let completedRuns = (playableCompletionRecords.first { $0.id == id }?.completedRuns ?? 0) + 1
+        let record = PlayableCompletionRecord(
+            scenarioID: scenario.id,
+            humanSide: abstractGame.humanSide,
+            difficulty: abstractGame.difficulty,
+            lastOutcome: outcome,
+            lastSeed: abstractGame.seed,
+            completedRuns: completedRuns,
+            updatedAt: Date()
+        )
+        playableCompletionRecords.removeAll { $0.id == id }
+        playableCompletionRecords.append(record)
+        persistPlayableCompletionRecords()
+    }
+
     private func actorName(_ actorID: String, in scenario: ZombieScenario) -> String {
         scenario.actors.first { $0.id == actorID }?.name ?? actorID
     }
@@ -477,8 +588,12 @@ final class ZombieAppStore: ObservableObject {
         }
         do {
             let save = PlayableGameSave(state: activeGame)
-            let data = try JSONEncoder().encode(save)
+            let data = try PlayableSaveCodec.encode(save)
+            if let previous = UserDefaults.standard.data(forKey: activeGameSaveKey) {
+                UserDefaults.standard.set(previous, forKey: activeGameBackupSaveKey)
+            }
             UserDefaults.standard.set(data, forKey: activeGameSaveKey)
+            UserDefaults.standard.set(data, forKey: activeGameBackupSaveKey)
             savedGame = activeGame
         } catch {
             playError = "Could not save Play Mode run."
@@ -487,16 +602,15 @@ final class ZombieAppStore: ObservableObject {
 
     private func clearSavedGame() {
         UserDefaults.standard.removeObject(forKey: activeGameSaveKey)
+        UserDefaults.standard.removeObject(forKey: activeGameBackupSaveKey)
         savedGame = nil
     }
 
     private func loadSavedGame() -> PlayableGameState? {
-        guard let data = UserDefaults.standard.data(forKey: activeGameSaveKey),
-              let save = try? JSONDecoder().decode(PlayableGameSave.self, from: data),
-              save.state.outcome == nil else {
-            return nil
-        }
-        return save.state
+        PlayableSaveCodec.recoveredState(
+            primary: UserDefaults.standard.data(forKey: activeGameSaveKey),
+            backup: UserDefaults.standard.data(forKey: activeGameBackupSaveKey)
+        )
     }
 
     private func persistPlayableCompletionRecords() {
@@ -540,7 +654,13 @@ struct ZombieRootView: View {
                 }
                 Section("Scenarios") {
                     ForEach(store.filteredScenarios) { scenario in
-                        Label(scenario.title, systemImage: symbol(for: scenario.tier))
+                        HStack {
+                            Label(scenario.title, systemImage: symbol(for: scenario.tier))
+                            Spacer()
+                            AvailabilityBadgeView(availability: ScenarioPlayAvailability.forScenario(scenario))
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(scenario.title), \(ScenarioPlayAvailability.forScenario(scenario).title)")
                             .tag(Optional(scenario.id))
                     }
                 }
@@ -586,11 +706,14 @@ struct ScenarioDetailView: View {
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Text(scenario.tier.rawValue.uppercased())
-                            .font(.caption)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(.thinMaterial)
+                        VStack(alignment: .trailing, spacing: 6) {
+                            Text(scenario.tier.rawValue.uppercased())
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(.thinMaterial)
+                            AvailabilityBadgeView(availability: ScenarioPlayAvailability.forScenario(scenario))
+                        }
                     }
 
                     Text(store.status)
@@ -612,13 +735,15 @@ struct ScenarioDetailView: View {
 
                     PlaySetupPanelView(scenario: scenario)
 
-                    Text(PlayableGameEngine.objectiveBriefing(for: scenario, humanSide: store.selectedHumanSide))
+                    Text(objectiveText(for: scenario))
                         .font(.headline)
 
                     ConfidenceView(confidence: scenario.dataConfidence)
 
                     if let game = store.activeGame, game.scenarioID == scenario.id {
                         PlayModeView(scenario: scenario, game: game)
+                    } else if let abstractGame = store.activeAbstractGame, abstractGame.scenarioID == scenario.id {
+                        AbstractPlayModeView(scenario: scenario, game: abstractGame)
                     } else {
                         ScenarioBoardView(scenario: scenario)
                             .frame(maxWidth: 760)
@@ -661,6 +786,53 @@ struct ScenarioDetailView: View {
     private func sideName(_ side: ForceSide, in scenario: ZombieScenario) -> String {
         scenario.forces.first { $0.side == side }.map { "\($0.name) - \($0.unit)" } ?? side.rawValue.capitalized
     }
+
+    private func objectiveText(for scenario: ZombieScenario) -> String {
+        if scenario.tier == .early {
+            return PlayableGameEngine.objectiveBriefing(for: scenario, humanSide: store.selectedHumanSide)
+        }
+        return PlayableAbstractEngine.sideBriefing(for: scenario, humanSide: store.selectedHumanSide)
+    }
+}
+
+struct AvailabilityBadgeView: View {
+    let availability: ScenarioPlayAvailability
+
+    var body: some View {
+        Label(availability.title, systemImage: symbol)
+            .font(.caption)
+            .labelStyle(.titleAndIcon)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(background)
+            .accessibilityLabel("Availability \(availability.title)")
+    }
+
+    private var symbol: String {
+        switch availability {
+        case .playable:
+            return "checkmark.circle"
+        case .preview:
+            return "eye"
+        case .deferred:
+            return "clock"
+        case .excluded:
+            return "xmark.octagon"
+        }
+    }
+
+    private var background: Color {
+        switch availability {
+        case .playable:
+            return Color.green.opacity(0.16)
+        case .preview:
+            return Color.blue.opacity(0.14)
+        case .deferred:
+            return Color.orange.opacity(0.16)
+        case .excluded:
+            return Color.red.opacity(0.14)
+        }
+    }
 }
 
 struct PlaySetupPanelView: View {
@@ -684,7 +856,7 @@ struct PlaySetupPanelView: View {
                 } label: {
                     Label("Start Game", systemImage: "flag.checkered")
                 }
-                .disabled(!scenario.playable || scenario.tier != .early)
+                .disabled(!canStartGame)
 
                 if store.savedGame?.scenarioID == scenario.id {
                     Button {
@@ -728,10 +900,10 @@ struct PlaySetupPanelView: View {
             }
 
             HStack {
-                Label(replaySummary, systemImage: store.earlyReplayResults.allSatisfy(\.passed) ? "checkmark.seal" : "exclamationmark.triangle")
+                Label(replaySummary, systemImage: availabilityIcon)
                     .font(.caption)
                 Spacer()
-                Text(PlayableGameEngine.fogOfWarPolicy)
+                Text(policyText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.trailing)
@@ -742,6 +914,9 @@ struct PlaySetupPanelView: View {
     }
 
     private var replaySummary: String {
+        if scenario.tier != .early {
+            return PlayableAbstractEngine.availability(scenario)
+        }
         let relevant = store.earlyReplayResults.filter { result in
             scenario.tier != .early || result.scenarioID == scenario.id
         }
@@ -750,6 +925,36 @@ struct PlaySetupPanelView: View {
         }
         let passed = relevant.filter(\.passed).count
         return "Replay \(passed)/\(relevant.count) side runs passed."
+    }
+
+    private var canStartGame: Bool {
+        ScenarioPlayAvailability.forScenario(scenario).allowsPlayMode
+    }
+
+    private var policyText: String {
+        guard ScenarioPlayAvailability.forScenario(scenario).allowsPlayMode else {
+            return PlayableAbstractEngine.availability(scenario)
+        }
+        if scenario.tier == .early {
+            return PlayableGameEngine.fogOfWarPolicy
+        }
+        switch scenario.tier {
+        case .vehicle:
+            return PlayableAbstractEngine.vehiclePlayPolicy
+        case .checkpoint:
+            return PlayableAbstractEngine.checkpointPlayPolicy
+        case .aircraft:
+            return PlayableAbstractEngine.advancedPlayPolicy
+        default:
+            return PlayableAbstractEngine.availability(scenario)
+        }
+    }
+
+    private var availabilityIcon: String {
+        if scenario.tier == .early {
+            return store.earlyReplayResults.allSatisfy(\.passed) ? "checkmark.seal" : "exclamationmark.triangle"
+        }
+        return ScenarioPlayAvailability.forScenario(scenario).allowsPlayMode ? "checkmark.seal" : "eye"
     }
 
     private func sideName(_ side: ForceSide) -> String {
@@ -943,6 +1148,17 @@ struct PlayModeView: View {
                         Label("Copy Seed", systemImage: "doc.on.doc")
                     }
                     .labelStyle(.iconOnly)
+                    Button {
+                        store.copyPlayLogExport(for: scenario)
+                    } label: {
+                        Label("Copy Log", systemImage: "doc.text")
+                    }
+                    .disabled(game.events.isEmpty)
+                    Button {
+                        store.copyPlaySummary(for: scenario)
+                    } label: {
+                        Label("Copy Summary", systemImage: "doc.plaintext")
+                    }
                 }
                 .foregroundStyle(.secondary)
             }
@@ -1123,6 +1339,229 @@ struct PlayModeView: View {
         scenario.forces.first { $0.side == side }?.name ?? side.rawValue.capitalized
     }
 
+}
+
+struct AbstractPlayModeView: View {
+    @EnvironmentObject private var store: ZombieAppStore
+    @State private var confirmAbandon = false
+    let scenario: ZombieScenario
+    let game: AbstractPlayableGameState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Abstract Play Mode").font(.headline)
+                Spacer()
+                HStack(spacing: 10) {
+                    Text("Turn \(game.turn) - \(game.phase.rawValue) - Seed \(game.seed)")
+                        .monospacedDigit()
+                    Button {
+                        store.copySeed(game.seed)
+                    } label: {
+                        Label("Copy Seed", systemImage: "doc.on.doc")
+                    }
+                    .labelStyle(.iconOnly)
+                    Button {
+                        store.copyPlayLogExport(for: scenario)
+                    } label: {
+                        Label("Copy Log", systemImage: "doc.text")
+                    }
+                    .disabled(game.events.isEmpty)
+                    Button {
+                        store.copyPlaySummary(for: scenario)
+                    } label: {
+                        Label("Copy Summary", systemImage: "doc.plaintext")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            Text(PlayableAbstractEngine.sideBriefing(for: scenario, humanSide: game.humanSide))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+
+            Text(PlayableAbstractEngine.availability(scenario))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if let outcome = game.outcome {
+                Text("Outcome: \(outcome)")
+                    .fontWeight(.semibold)
+            }
+
+            if let playError = store.playError {
+                Text(playError)
+                    .font(.callout)
+                    .foregroundStyle(.red)
+            }
+
+            HStack(spacing: 8) {
+                Button {
+                    store.applyAbstract(.advanceRoute, in: scenario)
+                } label: {
+                    Label("Advance Route", systemImage: "arrow.right.circle")
+                }
+                .disabled(!PlayableAbstractEngine.commandAvailable(.advanceRoute, in: game, scenario: scenario))
+
+                Button {
+                    store.applyAbstract(.hold, in: scenario)
+                } label: {
+                    Label("Hold", systemImage: "pause.fill")
+                }
+                .disabled(!PlayableAbstractEngine.commandAvailable(.hold, in: game, scenario: scenario))
+
+                Button {
+                    store.applyAbstract(.react, in: scenario)
+                } label: {
+                    Label("React", systemImage: "exclamationmark.triangle")
+                }
+                .disabled(!PlayableAbstractEngine.commandAvailable(.react, in: game, scenario: scenario))
+
+                Button {
+                    store.applyAbstract(.resolve, in: scenario)
+                } label: {
+                    Label("Resolve", systemImage: "checkmark.circle")
+                }
+                .disabled(!PlayableAbstractEngine.commandAvailable(.resolve, in: game, scenario: scenario))
+
+                Button(role: .destructive) {
+                    confirmAbandon = true
+                } label: {
+                    Label("Abandon", systemImage: "trash")
+                }
+            }
+            .labelStyle(.titleAndIcon)
+
+            HStack(alignment: .top, spacing: 20) {
+                ScenarioBoardView(scenario: scenario)
+                    .frame(maxWidth: 420)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    if !scenario.mechanics.vehicles.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Route State").font(.subheadline).fontWeight(.semibold)
+                            ForEach(scenario.mechanics.vehicles) { vehicle in
+                                Text("\(vehicle.label): \(routeStatus(for: vehicle))")
+                                    .font(.caption)
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+
+                    if !scenario.mechanics.checkpoints.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Checkpoint Alarms").font(.subheadline).fontWeight(.semibold)
+                            ForEach(scenario.mechanics.checkpoints) { checkpoint in
+                                Text("\(checkpoint.label): \(game.alarmedCheckpointIDs.contains(checkpoint.id) ? "Alarmed" : "Alarm T\(checkpoint.alarmTurn)")")
+                                    .font(.caption)
+                            }
+                        }
+                    }
+
+                    if !scenario.mechanics.aircraft.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Aircraft Markers").font(.subheadline).fontWeight(.semibold)
+                            ForEach(scenario.mechanics.aircraft) { lane in
+                                Text("\(lane.label): T\(lane.entryTurn)-\(lane.exitTurn), \(damageLabel(game.aircraftDamageStates[lane.id, default: .undamaged]))\(aircraftPointText(for: lane))")
+                                    .font(.caption)
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+
+                    if !scenario.mechanics.indirectFire.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Warning Markers").font(.subheadline).fontWeight(.semibold)
+                            ForEach(scenario.mechanics.indirectFire) { fire in
+                                Text("\(fire.label): \(indirectStatus(for: fire))")
+                                    .font(.caption)
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+
+                    if !game.structureHealth.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Damage State").font(.subheadline).fontWeight(.semibold)
+                            ForEach(game.structureHealth.keys.sorted(), id: \.self) { id in
+                                Text("\(structureLabel(id)): health \(game.structureHealth[id] ?? 0)")
+                                    .font(.caption)
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Play Log").font(.subheadline).fontWeight(.semibold)
+                ForEach(game.events.suffix(12)) { event in
+                    Text("T\(event.turn) \(event.phase): \(event.summary)")
+                        .font(.caption)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .padding(14)
+        .background(Color.black.opacity(0.05))
+        .confirmationDialog("Abandon this Play Mode run?", isPresented: $confirmAbandon, titleVisibility: .visible) {
+            Button("Abandon Run", role: .destructive) {
+                store.abandonActiveGame()
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    private func routeStatus(for vehicle: VehicleRoute) -> String {
+        if game.damagedVehicleIDs.contains(vehicle.id) {
+            return "Damaged"
+        }
+        let progress = game.routeProgress[vehicle.id, default: 0]
+        if progress >= vehicle.path.count {
+            return "Complete \(progress)/\(vehicle.path.count)"
+        }
+        guard progress > 0, !vehicle.path.isEmpty else {
+            return "Ready 0/\(vehicle.path.count)"
+        }
+        let point = vehicle.path[min(progress - 1, vehicle.path.count - 1)]
+        return "Marker \(point.id) \(progress)/\(vehicle.path.count)"
+    }
+
+    private func aircraftPointText(for lane: AircraftLane) -> String {
+        guard lane.entryTurn <= game.turn, game.turn <= lane.exitTurn, !lane.path.isEmpty else {
+            return ""
+        }
+        let index = min(max(game.turn - lane.entryTurn, 0), lane.path.count - 1)
+        return " at \(lane.path[index].id)"
+    }
+
+    private func indirectStatus(for fire: IndirectFirePlan) -> String {
+        if game.resolvedImpactIDs.contains(fire.id) {
+            return "Resolved"
+        }
+        if game.turn < fire.warningTurn {
+            return "Warning T\(fire.warningTurn), impact T\(fire.impactTurn)"
+        }
+        if game.turn < fire.impactTurn {
+            return "Warning active, impact T\(fire.impactTurn)"
+        }
+        return "Impact due"
+    }
+
+    private func structureLabel(_ id: String) -> String {
+        if let structure = scenario.mechanics.structures.first(where: { $0.id == id }) {
+            return structure.label
+        }
+        if let checkpoint = scenario.mechanics.checkpoints.first(where: { $0.id == id }) {
+            return checkpoint.label
+        }
+        return id
+    }
+
+    private func damageLabel(_ state: AircraftDamageState) -> String {
+        state.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
+    }
 }
 
 struct TutorialStepsView: View {

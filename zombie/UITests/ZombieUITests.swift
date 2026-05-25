@@ -88,6 +88,62 @@ final class ZombieUITests: XCTestCase {
         XCTAssertTrue(completeStatus.waitForExistence(timeout: 8))
     }
 
+    func testVehicleScenarioStartsAbstractPlayMode() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["zombie"].waitForExistence(timeout: 8))
+
+        let search = app.textFields["Search"].firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 8))
+        search.tap()
+        search.typeText("Dungiven")
+
+        let dungiven = app.staticTexts["Dungiven Landmine and Gun Attack"].firstMatch
+        XCTAssertTrue(dungiven.waitForExistence(timeout: 8))
+        dungiven.tap()
+
+        let startGame = app.buttons["Start Game"].firstMatch
+        XCTAssertTrue(startGame.waitForExistence(timeout: 8))
+        XCTAssertTrue(startGame.isEnabled)
+        startGame.tap()
+
+        XCTAssertTrue(app.staticTexts["Abstract Play Mode"].waitForExistence(timeout: 8))
+
+        let advance = app.buttons["Advance Route"].firstMatch
+        XCTAssertTrue(advance.waitForExistence(timeout: 8))
+        XCTAssertTrue(advance.isEnabled)
+        advance.tap()
+
+        let resolve = app.buttons["Resolve"].firstMatch
+        XCTAssertTrue(resolve.waitForExistence(timeout: 8))
+        XCTAssertTrue(resolve.isEnabled)
+        resolve.tap()
+
+        let routeEvent = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "vehicle-route")).firstMatch
+        XCTAssertTrue(routeEvent.waitForExistence(timeout: 8))
+    }
+
+    func testDeferredScenarioCannotStartPlayMode() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["zombie"].waitForExistence(timeout: 8))
+
+        let search = app.textFields["Search"].firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 8))
+        search.tap()
+        search.typeText("1985 Newry Mortar")
+
+        let mortar = app.staticTexts["1985 Newry Mortar Attack"].firstMatch
+        XCTAssertTrue(mortar.waitForExistence(timeout: 8))
+        mortar.tap()
+
+        let startGame = app.buttons["Start Game"].firstMatch
+        XCTAssertTrue(startGame.waitForExistence(timeout: 8))
+        XCTAssertFalse(startGame.isEnabled)
+    }
+
     func testSearchFindsAdvancedScenario() throws {
         let app = XCUIApplication()
         app.launch()

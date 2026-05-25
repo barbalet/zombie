@@ -15,12 +15,16 @@ This demo candidate includes a Mac Catalyst app, deterministic scenario catalog,
 - Initial Play Mode spine for early infantry scenarios with side selection, manual commands, and deterministic AI stepping.
 - Manual alpha Play Mode for Drummuckavall with actor inspection, action controls, board highlights, save/resume, reset, manual completion records, side comparison, side-aware objectives, and AI difficulty.
 - Manual beta replay for all early infantry scenarios from either side, plus a fictional tutorial, visible turn order, actor status, log filters, replay seed display, and documented fog-of-war deferral.
+- Abstract Play Mode for the first safe vehicle, checkpoint, and aircraft tier scenarios with route advance, hold, react, resolve, alarm state, aircraft markers, warning markers, damage state, and side-selectable smoke replay.
+- Cycle-300 availability labels, deferred guardrails, versioned save recovery, JSONL play-log copy, human-readable summary copy, and release rehearsal coverage.
 - Unit, UI, regression, packaging, and diagnostics scripts.
 
 ## Known Limits
 
-- Preview Mode remains the complete automated path; Play Mode is in active development and currently has the early infantry set as the deterministic manual beta.
+- Preview Mode remains the complete automated path; Play Mode is in active development and currently has early infantry plus selected abstract vehicle/checkpoint/aircraft scenarios.
 - Fog of war is deferred; actors and logs are visible for replay and review.
-- Aircraft and mortar events are abstract timing systems only.
+- Vehicle blasts, checkpoint damage, aircraft events, and mortar/indirect-fire events are abstract timing and state systems only.
+- Mortar-only and complex staged vehicle scenarios remain Preview Mode only pending later cycle review.
+- Save recovery uses local UserDefaults primary/backup payloads. It is sufficient for the demo baseline, not a multi-slot campaign save system.
 - Screenshot baselines are documented but not yet stored as image snapshots.
 - Packaged app signing is local debug signing only.

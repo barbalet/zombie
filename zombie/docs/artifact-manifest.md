@@ -7,6 +7,7 @@ Release-candidate artifacts should include:
 - `PLAN.md`.
 - `zombie/docs/release-notes.md`.
 - `zombie/docs/demo-script.md`.
+- `zombie/docs/playtest-script.md`.
 - `zombie/docs/qa-checklist.md`.
 - `zombie/docs/sensitivity-audit.md`.
 - `zombie/docs/privacy-storage.md`.

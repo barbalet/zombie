@@ -345,6 +345,20 @@ Cycles 241-260 have been run into the first early-infantry manual beta:
 - Protected cells remain untargetable, no early side-run ends on turn 1, fog of war is explicitly deferred, actor status/turn order/log filters/replay seed/undo policy are visible in Play Mode, and tutorial completion is covered by UI smoke.
 - Execution notes are recorded in [zombie/docs/cycles-241-260-execution.md](zombie/docs/cycles-241-260-execution.md).
 
+Cycles 261-280 have been run into the first non-infantry abstract Play Mode:
+
+- Dungiven, Dungannon, Altnaveigh, Ballygawley, Derryard, Cloghoge, Glenanne, Loughgall, Battle of Newry Road, and the 1994 Lynx shootdown start from either side using abstract route, hold, react, and resolve commands.
+- Route progress, hazards, checkpoint alarms, aircraft lane markers, warning markers, damage states, exits, and structure health are stepable without adding operational weapon procedures.
+- Warrenpoint, Mullacreevie, Fivemiletown, Killeeshil, mortar-only Newry, and deferred content remain Preview Mode only for later review.
+- Execution notes are recorded in [zombie/docs/cycles-261-280-execution.md](zombie/docs/cycles-261-280-execution.md).
+
+Cycles 281-300 have been run into the playable-game release baseline:
+
+- Browser/detail availability labels now distinguish Playable, Preview, Deferred, and Excluded content, and deferred/mortar-only scenarios cannot launch Play Mode.
+- Play Mode saves use a versioned schema with backup recovery, and manual logs can be copied as JSONL or human-readable summaries with scenario, side, seed, outcome, source, and scope warning.
+- Cycle-300 content is locked to all early infantry/tutorial scenarios plus the selected abstract vehicle/checkpoint/aircraft set; complex staged vehicle and mortar-only scenarios stay Preview/Deferred.
+- Final playtest, QA, performance, storage, release notes, and package docs are updated, with execution notes in [zombie/docs/cycles-281-300-execution.md](zombie/docs/cycles-281-300-execution.md).
+
 | Cycle | Work | Goal | Acceptance |
 |---:|---|---|---|
 | 201 | Current-state correction | Rename the existing automated path as Preview Mode. | README and release notes distinguish Preview Mode from Play Mode. |

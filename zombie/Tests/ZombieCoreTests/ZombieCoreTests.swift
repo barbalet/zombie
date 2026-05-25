@@ -163,6 +163,179 @@ final class ZombieCoreTests: XCTestCase {
         }
     }
 
+    func testAbstractVehicleRouteTurnAdvancesAndBlocksInvalidPhase() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let scenario = try XCTUnwrap(catalog.scenarios.first { $0.id == "dungiven-1972" })
+        let vehicle = try XCTUnwrap(scenario.mechanics.vehicles.first)
+        var state = try PlayableAbstractEngine.start(scenario, humanSide: .opponent)
+
+        XCTAssertEqual(state.phase, .humanActivation)
+        XCTAssertTrue(PlayableAbstractEngine.commandAvailable(.advanceRoute, in: state, scenario: scenario))
+        XCTAssertThrowsError(try PlayableAbstractEngine.applying(.resolve, to: state, scenario: scenario))
+
+        state = try PlayableAbstractEngine.applying(.advanceRoute, to: state, scenario: scenario)
+        XCTAssertEqual(state.phase, .resolution)
+        XCTAssertEqual(state.routeProgress[vehicle.id], 1)
+        XCTAssertTrue(state.events.contains { $0.phase == "vehicle-route" })
+        XCTAssertFalse(PlayableAbstractEngine.commandAvailable(.advanceRoute, in: state, scenario: scenario))
+
+        state = try PlayableAbstractEngine.applying(.resolve, to: state, scenario: scenario)
+        XCTAssertEqual(state.phase, .humanActivation)
+        XCTAssertEqual(state.turn, 2)
+    }
+
+    func testReadyVehicleScenariosCompleteFromBothSidesAndNonReadyRemainPreviewOnly() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let readyIDs = PlayableAbstractEngine.vehiclePlayableScenarioIDs
+        let ready = catalog.scenarios.filter { readyIDs.contains($0.id) }
+        let nonReady = catalog.scenarios.filter { $0.tier == .vehicle && !readyIDs.contains($0.id) }
+
+        XCTAssertEqual(Set(ready.map(\.id)), readyIDs)
+        XCTAssertFalse(nonReady.isEmpty)
+
+        for scenario in ready {
+            for side in ForceSide.allCases {
+                let state = try PlayableAbstractEngine.runSmokePlaythrough(scenario, humanSide: side)
+                XCTAssertEqual(state.phase, .finished, "\(scenario.id) \(side.rawValue)")
+                XCTAssertNotNil(state.outcome, "\(scenario.id) \(side.rawValue)")
+                XCTAssertTrue(state.events.contains { $0.phase == "abstract-blast" || $0.phase == "outcome" }, scenario.id)
+            }
+        }
+
+        for scenario in nonReady {
+            XCTAssertFalse(PlayableAbstractEngine.isPlayable(scenario), scenario.id)
+            XCTAssertThrowsError(try PlayableAbstractEngine.start(scenario, humanSide: .player), scenario.id)
+        }
+    }
+
+    func testCheckpointAlarmTransitionAndReadySetCompletes() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let loughgall = try XCTUnwrap(catalog.scenarios.first { $0.id == "loughgall-1987" })
+        let checkpoint = try XCTUnwrap(loughgall.mechanics.checkpoints.first)
+        var state = try PlayableAbstractEngine.start(loughgall, humanSide: .opponent)
+
+        state = try PlayableAbstractEngine.applying(.react, to: state, scenario: loughgall)
+        XCTAssertTrue(state.alarmedCheckpointIDs.contains(checkpoint.id))
+        XCTAssertTrue(state.events.contains { $0.phase == "alarm" })
+
+        for scenario in catalog.scenarios where PlayableAbstractEngine.checkpointPlayableScenarioIDs.contains(scenario.id) {
+            for side in ForceSide.allCases {
+                let completed = try PlayableAbstractEngine.runSmokePlaythrough(scenario, humanSide: side)
+                XCTAssertEqual(completed.phase, .finished, "\(scenario.id) \(side.rawValue)")
+                XCTAssertNotNil(completed.outcome, "\(scenario.id) \(side.rawValue)")
+                XCTAssertEqual(completed.events.filter { $0.phase == "protected-zone" }.count, 0, scenario.id)
+            }
+        }
+    }
+
+    func testAircraftAbstractStateModelsWarningsDamageAndExit() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let newryRoad = try XCTUnwrap(catalog.scenarios.first { $0.id == "newry-road-1993" })
+        let lynx = try XCTUnwrap(catalog.scenarios.first { $0.id == "lynx-shootdown-1994" })
+
+        let newryRun = try PlayableAbstractEngine.runSmokePlaythrough(newryRoad, humanSide: .player)
+        XCTAssertEqual(newryRun.phase, .finished)
+        XCTAssertTrue(newryRun.aircraftDamageStates.values.contains(.damaged))
+        XCTAssertTrue(newryRun.aircraftDamageStates.values.contains(.exited))
+        XCTAssertTrue(newryRun.events.contains { $0.phase == "aircraft-lane" })
+        XCTAssertTrue(newryRun.events.contains { $0.phase == "aircraft-exit" })
+
+        let lynxRun = try PlayableAbstractEngine.runSmokePlaythrough(lynx, humanSide: .opponent)
+        let phases = Set(lynxRun.events.map(\.phase))
+        XCTAssertEqual(lynxRun.phase, .finished)
+        XCTAssertTrue(phases.contains("aircraft-damage"))
+        XCTAssertTrue(phases.contains("indirect-warning"))
+        XCTAssertTrue(phases.contains("indirect-impact"))
+        XCTAssertTrue(phases.contains("structure-damage"))
+    }
+
+    func testAbstractReplayCorpusAndAdvancedPolicyKeepMortarPreviewOnly() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let replay = PlayableAbstractEngine.runReadyCorpusReplay(catalog)
+        let failures = replay.filter { !$0.passed }
+        let newryMortar = try XCTUnwrap(catalog.scenarios.first { $0.id == "newry-mortar-1985" })
+
+        XCTAssertEqual(replay.count, PlayableAbstractEngine.abstractPlayableScenarioIDs.count * ForceSide.allCases.count)
+        XCTAssertTrue(failures.isEmpty, failures.map { "\($0.scenarioID) \($0.humanSide.rawValue): \($0.outcome)" }.joined(separator: "\n"))
+        XCTAssertFalse(PlayableAbstractEngine.isPlayable(newryMortar))
+        XCTAssertTrue(PlayableAbstractEngine.availability(newryMortar).contains("Preview Mode only"))
+        XCTAssertThrowsError(try PlayableAbstractEngine.start(newryMortar, humanSide: .player))
+    }
+
+    func testScenarioAvailabilityLabelsMatchCycle300ContentLock() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let playableIDs = Set(catalog.scenarios.filter { ScenarioPlayAvailability.forScenario($0) == .playable }.map(\.id))
+        let previewIDs = Set(catalog.scenarios.filter { ScenarioPlayAvailability.forScenario($0) == .preview }.map(\.id))
+        let deferredIDs = Set(catalog.scenarios.filter { ScenarioPlayAvailability.forScenario($0) == .deferred }.map(\.id))
+
+        XCTAssertTrue(playableIDs.isSuperset(of: [
+            "play-mode-tutorial",
+            "drummuckavall-1975",
+            "glasdrumman-1981",
+            "dungiven-1972",
+            "derryard-1989",
+            "newry-road-1993",
+            "lynx-shootdown-1994"
+        ]))
+        XCTAssertTrue(previewIDs.isSuperset(of: [
+            "mullacreevie-1991",
+            "warrenpoint-1979",
+            "fivemiletown-1993",
+            "killeeshil-1994"
+        ]))
+        XCTAssertTrue(deferredIDs.isSuperset(of: [
+            "newry-mortar-1985",
+            "osnabruck-mortar-1996"
+        ]))
+    }
+
+    func testPlayableSaveSchemaMigrationAndCrashSafeRecovery() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let scenario = try XCTUnwrap(catalog.scenarios.first { $0.id == "drummuckavall-1975" })
+        let state = try PlayableGameEngine.start(scenario, humanSide: .player, difficulty: .hard)
+        let save = PlayableGameSave(state: state, savedAt: Date(timeIntervalSince1970: 1_800_000_000))
+        let encoded = try PlayableSaveCodec.encode(save)
+        let recovered = PlayableSaveCodec.recoveredState(primary: Data("not-json".utf8), backup: encoded)
+
+        XCTAssertEqual(save.schemaVersion, PlayableGameSave.currentSchemaVersion)
+        XCTAssertEqual(recovered, state)
+        XCTAssertNil(PlayableSaveCodec.recoveredState(primary: Data("not-json".utf8), backup: nil))
+
+        var payload = try JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        payload?["schemaVersion"] = PlayableGameSave.currentSchemaVersion + 1
+        let unsupported = try JSONSerialization.data(withJSONObject: payload ?? [:])
+        XCTAssertNil(PlayableSaveCodec.decodeState(from: unsupported))
+    }
+
+    func testPlayableLogExportsIncludeScenarioSideSeedAndSummary() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let early = try XCTUnwrap(catalog.scenarios.first { $0.id == "play-mode-tutorial" })
+        let vehicle = try XCTUnwrap(catalog.scenarios.first { $0.id == "dungiven-1972" })
+        let earlyGame = try PlayableGameEngine.runSmokePlaythrough(early, humanSide: .player, difficulty: .easy)
+        let abstractGame = try PlayableAbstractEngine.runSmokePlaythrough(vehicle, humanSide: .opponent, difficulty: .standard)
+
+        let earlyJSONL = try PlayableLogExporter.jsonLines(for: earlyGame, scenario: early)
+        XCTAssertTrue(earlyJSONL.contains("\"scenarioID\":\"play-mode-tutorial\""))
+        XCTAssertTrue(earlyJSONL.contains("\"humanSide\":\"player\""))
+        XCTAssertTrue(earlyJSONL.contains("\"seed\":\(earlyGame.seed)"))
+
+        let abstractSummary = PlayableLogExporter.summary(for: abstractGame, scenario: vehicle)
+        XCTAssertTrue(abstractSummary.contains("Scenario: Dungiven Landmine and Gun Attack"))
+        XCTAssertTrue(abstractSummary.contains("Source: https://en.wikipedia.org/wiki/Dungiven_landmine_and_gun_attack"))
+        XCTAssertTrue(abstractSummary.contains("Scope warning:"))
+        XCTAssertTrue(abstractSummary.contains(abstractGame.outcome ?? ""))
+    }
+
+    func testCycle300ReleaseRehearsalCompletesTutorialEarlyAndAbstractRuns() throws {
+        let catalog = try ScenarioCatalog.bundled()
+        let rehearsal = PlayableReleaseRehearsal.run(catalog)
+
+        XCTAssertEqual(Set(rehearsal.map(\.scenarioID)), Set(PlayableReleaseRehearsal.scenarioIDs))
+        XCTAssertTrue(rehearsal.allSatisfy(\.finished), rehearsal.map { "\($0.scenarioID): \($0.outcome)" }.joined(separator: "\n"))
+        XCTAssertTrue(rehearsal.allSatisfy { $0.eventCount > 1 })
+        XCTAssertTrue(rehearsal.contains { $0.scenarioID == "dungiven-1972" && $0.outcome == "route interdicted" })
+    }
+
     func testCivilianRiskScenariosDeclareProtectedCells() throws {
         let catalog = try ScenarioCatalog.bundled()
         let sensitive = catalog.scenarios.filter { $0.sensitivityTags.contains("civilian-risk") }

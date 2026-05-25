@@ -10,5 +10,5 @@ xcodebuild -project zombie.xcodeproj -scheme Zombie -configuration Debug -destin
 mkdir -p "$OUT_DIR"
 cp -R "$APP_PATH" "$OUT_DIR/"
 cp README.md PLAN.md "$OUT_DIR/"
-cp zombie/docs/release-notes.md zombie/docs/demo-script.md zombie/docs/qa-checklist.md "$OUT_DIR/"
+cp zombie/docs/release-notes.md zombie/docs/demo-script.md zombie/docs/playtest-script.md zombie/docs/qa-checklist.md "$OUT_DIR/"
 printf 'Packaged %s\n' "$OUT_DIR/Zombie.app"

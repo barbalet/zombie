@@ -168,6 +168,609 @@ public struct PlayableGameState: Codable, Equatable, Identifiable {
     }
 }
 
+public enum AbstractPlayableCommand: String, Codable, Equatable, CaseIterable, Identifiable {
+    case advanceRoute
+    case hold
+    case react
+    case resolve
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .advanceRoute:
+            return "Advance Route"
+        case .hold:
+            return "Hold"
+        case .react:
+            return "React"
+        case .resolve:
+            return "Resolve"
+        }
+    }
+}
+
+public struct AbstractPlayableReplayResult: Codable, Equatable, Identifiable {
+    public var id: String { "\(scenarioID)-\(humanSide.rawValue)" }
+    public var scenarioID: String
+    public var humanSide: ForceSide
+    public var finished: Bool
+    public var turns: Int
+    public var eventCount: Int
+    public var outcome: String
+    public var protectedZoneViolations: Int
+
+    public var passed: Bool {
+        finished && turns > 0 && eventCount > 1 && protectedZoneViolations == 0
+    }
+}
+
+public enum AbstractPlayableError: Error, CustomStringConvertible, Equatable {
+    case scenarioNotPlayable(String)
+    case unsupportedTier(ScenarioTier)
+    case commandUnavailable(AbstractPlayableCommand)
+    case invalidPhase(PlayableGamePhase)
+    case playthroughLimitReached(Int)
+
+    public var description: String {
+        switch self {
+        case .scenarioNotPlayable(let id):
+            return "\(id) is not available for Abstract Play Mode."
+        case .unsupportedTier(let tier):
+            return "\(tier.rawValue.capitalized) scenarios remain in Preview Mode for this cycle."
+        case .commandUnavailable(let command):
+            return "\(command.title) is not available in the current abstract state."
+        case .invalidPhase(let phase):
+            return "Cannot perform that abstract command during \(phase.rawValue)."
+        case .playthroughLimitReached(let limit):
+            return "Abstract smoke playthrough did not finish within \(limit) commands."
+        }
+    }
+}
+
+public struct AbstractPlayableGameState: Codable, Equatable, Identifiable {
+    public var id: String { scenarioID }
+    public var schemaVersion: Int
+    public var scenarioID: String
+    public var humanSide: ForceSide
+    public var difficulty: PlayableAIDifficulty
+    public var seed: UInt32
+    public var turn: Int
+    public var phase: PlayableGamePhase
+    public var routeProgress: [String: Int]
+    public var triggeredHazardIDs: Set<String>
+    public var damagedVehicleIDs: Set<String>
+    public var alarmedCheckpointIDs: Set<String>
+    public var aircraftDamageStates: [String: AircraftDamageState]
+    public var exitedAircraftIDs: Set<String>
+    public var resolvedImpactIDs: Set<String>
+    public var structureHealth: [String: Int]
+    public var events: [ScenarioEvent]
+    public var outcome: String?
+
+    public var finished: Bool {
+        phase == .finished || outcome != nil
+    }
+}
+
+public enum PlayableAbstractEngine {
+    public static let vehiclePlayPolicy = "Cycle 261 decision: vehicle Play Mode exposes route advance, hold, react, and resolve choices only; mine and blast effects remain abstract outcome events."
+    public static let checkpointPlayPolicy = "Cycle 270 decision: checkpoint Play Mode exposes alarm, route, and damage-state decisions only; base layouts and breach details remain abstract."
+    public static let advancedPlayPolicy = "Cycle 276 decision: aircraft Play Mode exposes lane timing, warning markers, damage state, and exits only; mortar-only scenarios remain Preview Mode."
+
+    public static let vehiclePlayableScenarioIDs: Set<String> = [
+        "dungiven-1972",
+        "dungannon-1979",
+        "altnaveigh-1981",
+        "ballygawley-landmine-1983"
+    ]
+
+    public static let checkpointPlayableScenarioIDs: Set<String> = [
+        "derryard-1989",
+        "cloghoge-1992",
+        "glenanne-1991",
+        "loughgall-1987"
+    ]
+
+    public static let aircraftPlayableScenarioIDs: Set<String> = [
+        "newry-road-1993",
+        "lynx-shootdown-1994"
+    ]
+
+    public static var abstractPlayableScenarioIDs: Set<String> {
+        vehiclePlayableScenarioIDs
+            .union(checkpointPlayableScenarioIDs)
+            .union(aircraftPlayableScenarioIDs)
+    }
+
+    public static func isPlayable(_ scenario: ZombieScenario) -> Bool {
+        guard scenario.playable else {
+            return false
+        }
+        switch scenario.tier {
+        case .vehicle:
+            return vehiclePlayableScenarioIDs.contains(scenario.id)
+        case .checkpoint:
+            return checkpointPlayableScenarioIDs.contains(scenario.id)
+        case .aircraft:
+            return aircraftPlayableScenarioIDs.contains(scenario.id)
+        default:
+            return false
+        }
+    }
+
+    public static func availability(_ scenario: ZombieScenario) -> String {
+        if isPlayable(scenario) {
+            switch scenario.tier {
+            case .vehicle:
+                return "Abstract Play Mode available: \(vehiclePlayPolicy)"
+            case .checkpoint:
+                return "Abstract Play Mode available: \(checkpointPlayPolicy)"
+            case .aircraft:
+                return "Abstract Play Mode available: \(advancedPlayPolicy)"
+            default:
+                return "Use infantry Play Mode for this scenario."
+            }
+        }
+        if scenario.tier == .mortar || scenario.tier == .deferred || scenario.tier == .excluded {
+            return "Preview Mode only: deferred or mortar-only content is blocked from Play Mode."
+        }
+        if scenario.tier == .vehicle || scenario.tier == .checkpoint || scenario.tier == .aircraft {
+            return "Preview Mode only for cycles 261-280: this scenario needs more review before manual play."
+        }
+        return "Use infantry Play Mode for early scenarios."
+    }
+
+    public static func sideBriefing(for scenario: ZombieScenario, humanSide: ForceSide) -> String {
+        let side = sideName(humanSide, in: scenario)
+        switch scenario.tier {
+        case .vehicle:
+            return "As \(side), choose when to advance, hold, react, or resolve the shared route state. Convoy survival and route interdiction are represented as high-level outcomes."
+        case .checkpoint:
+            return "As \(side), choose route, alarm, reaction, and damage-state timing. Checkpoint play stays at the level of alarms, positions, and abstract structure health."
+        case .aircraft:
+            return "As \(side), choose lane timing, reaction, and resolution around aircraft markers. The model records warnings, damage states, and exits without operational procedure detail."
+        default:
+            return PlayableGameEngine.objectiveBriefing(for: scenario, humanSide: humanSide)
+        }
+    }
+
+    public static func start(_ scenario: ZombieScenario, humanSide: ForceSide, difficulty: PlayableAIDifficulty = .standard) throws -> AbstractPlayableGameState {
+        guard scenario.playable else {
+            throw AbstractPlayableError.scenarioNotPlayable(scenario.id)
+        }
+        guard isPlayable(scenario) else {
+            throw AbstractPlayableError.unsupportedTier(scenario.tier)
+        }
+
+        var health = Dictionary(uniqueKeysWithValues: scenario.mechanics.structures.map { ($0.id, $0.health) })
+        for checkpoint in scenario.mechanics.checkpoints {
+            health[checkpoint.id] = max(1, checkpoint.armor + 1)
+        }
+
+        let seed = stableSeed(for: scenario.id, side: humanSide, index: 261)
+        return AbstractPlayableGameState(
+            schemaVersion: 1,
+            scenarioID: scenario.id,
+            humanSide: humanSide,
+            difficulty: difficulty,
+            seed: seed,
+            turn: 1,
+            phase: .humanActivation,
+            routeProgress: Dictionary(uniqueKeysWithValues: scenario.mechanics.vehicles.map { ($0.id, 0) }),
+            triggeredHazardIDs: [],
+            damagedVehicleIDs: [],
+            alarmedCheckpointIDs: [],
+            aircraftDamageStates: Dictionary(uniqueKeysWithValues: scenario.mechanics.aircraft.map { ($0.id, AircraftDamageState.undamaged) }),
+            exitedAircraftIDs: [],
+            resolvedImpactIDs: [],
+            structureHealth: health,
+            events: [
+                ScenarioEvent(
+                    id: 1,
+                    turn: 1,
+                    phase: "abstract-start",
+                    actor: sideName(humanSide, in: scenario),
+                    target: scenario.title,
+                    summary: "Abstract Play Mode started as \(sideName(humanSide, in: scenario))."
+                )
+            ],
+            outcome: nil
+        )
+    }
+
+    public static func commandAvailable(_ command: AbstractPlayableCommand, in state: AbstractPlayableGameState, scenario: ZombieScenario) -> Bool {
+        guard !state.finished else {
+            return false
+        }
+        switch command {
+        case .advanceRoute:
+            guard state.phase == .humanActivation else {
+                return false
+            }
+            return hasRouteAvailable(in: state, scenario: scenario) || hasActiveAircraftLane(in: state, scenario: scenario)
+        case .hold:
+            return state.phase == .humanActivation
+        case .react:
+            guard state.phase == .humanActivation else {
+                return false
+            }
+            return !scenario.mechanics.checkpoints.isEmpty || !scenario.mechanics.aircraft.isEmpty || !scenario.mechanics.indirectFire.isEmpty
+        case .resolve:
+            return state.phase == .resolution
+        }
+    }
+
+    public static func applying(_ command: AbstractPlayableCommand, to state: AbstractPlayableGameState, scenario: ZombieScenario) throws -> AbstractPlayableGameState {
+        guard isPlayable(scenario) else {
+            throw AbstractPlayableError.scenarioNotPlayable(scenario.id)
+        }
+        guard commandAvailable(command, in: state, scenario: scenario) else {
+            if command == .resolve || state.phase != .humanActivation {
+                throw AbstractPlayableError.invalidPhase(state.phase)
+            }
+            throw AbstractPlayableError.commandUnavailable(command)
+        }
+
+        var state = state
+        switch command {
+        case .advanceRoute:
+            advanceRoutesAndLanes(&state, scenario: scenario)
+            state.phase = .resolution
+        case .hold:
+            appendEvent(&state, phase: "abstract-hold", actor: sideName(state.humanSide, in: scenario), target: "", summary: "\(sideName(state.humanSide, in: scenario)) holds current abstract positions.")
+            state.phase = .resolution
+        case .react:
+            applyReaction(&state, scenario: scenario)
+            state.phase = .resolution
+        case .resolve:
+            resolveTurn(&state, scenario: scenario)
+        }
+        return state
+    }
+
+    public static func runSmokePlaythrough(_ scenario: ZombieScenario, humanSide: ForceSide, difficulty: PlayableAIDifficulty = .standard, maxCommands: Int = 80) throws -> AbstractPlayableGameState {
+        var state = try start(scenario, humanSide: humanSide, difficulty: difficulty)
+        var commandCount = 0
+
+        while !state.finished && commandCount < maxCommands {
+            let command: AbstractPlayableCommand
+            if commandAvailable(.advanceRoute, in: state, scenario: scenario) {
+                command = .advanceRoute
+            } else if commandAvailable(.react, in: state, scenario: scenario) {
+                command = .react
+            } else {
+                command = .hold
+            }
+
+            state = try applying(command, to: state, scenario: scenario)
+            commandCount += 1
+
+            if commandAvailable(.resolve, in: state, scenario: scenario) {
+                state = try applying(.resolve, to: state, scenario: scenario)
+                commandCount += 1
+            }
+        }
+
+        guard state.finished else {
+            throw AbstractPlayableError.playthroughLimitReached(maxCommands)
+        }
+        return state
+    }
+
+    public static func runReadyCorpusReplay(_ catalog: ZombieScenarioCatalog, difficulty: PlayableAIDifficulty = .standard) -> [AbstractPlayableReplayResult] {
+        catalog.scenarios
+            .filter(isPlayable)
+            .sorted { $0.id < $1.id }
+            .flatMap { scenario in
+                ForceSide.allCases.map { side in
+                    replayResult(for: scenario, humanSide: side, difficulty: difficulty)
+                }
+            }
+    }
+
+    public static func replayResult(for scenario: ZombieScenario, humanSide: ForceSide, difficulty: PlayableAIDifficulty = .standard) -> AbstractPlayableReplayResult {
+        do {
+            let state = try runSmokePlaythrough(scenario, humanSide: humanSide, difficulty: difficulty)
+            return AbstractPlayableReplayResult(
+                scenarioID: scenario.id,
+                humanSide: humanSide,
+                finished: state.finished,
+                turns: state.turn,
+                eventCount: state.events.count,
+                outcome: state.outcome ?? "unfinished",
+                protectedZoneViolations: state.events.filter { $0.phase == "protected-zone" }.count
+            )
+        } catch {
+            return AbstractPlayableReplayResult(
+                scenarioID: scenario.id,
+                humanSide: humanSide,
+                finished: false,
+                turns: 0,
+                eventCount: 0,
+                outcome: String(describing: error),
+                protectedZoneViolations: 0
+            )
+        }
+    }
+
+    private static func advanceRoutesAndLanes(_ state: inout AbstractPlayableGameState, scenario: ZombieScenario) {
+        let protectedCells = scenario.map.protectedCellSet
+        for vehicle in scenario.mechanics.vehicles.sorted(by: { $0.id < $1.id }) {
+            guard !state.damagedVehicleIDs.contains(vehicle.id) else {
+                continue
+            }
+            let currentProgress = state.routeProgress[vehicle.id, default: 0]
+            guard currentProgress < vehicle.path.count else {
+                continue
+            }
+            let point = vehicle.path[currentProgress]
+            state.routeProgress[vehicle.id] = currentProgress + 1
+            if protectedCells.contains(point) {
+                appendEvent(&state, phase: "protected-zone", actor: vehicle.label, target: point.id, summary: "\(vehicle.label) route was blocked from protected cell \(point.id).")
+            } else {
+                appendEvent(&state, phase: "vehicle-route", actor: vehicle.label, target: point.id, summary: "\(vehicle.label) reaches route marker \(point.id).")
+            }
+        }
+
+        for lane in scenario.mechanics.aircraft.sorted(by: { $0.id < $1.id }) where lane.entryTurn <= state.turn && state.turn <= lane.exitTurn {
+            let damageState = state.aircraftDamageStates[lane.id, default: .undamaged]
+            guard damageState != .damaged && damageState != .downed && damageState != .exited else {
+                continue
+            }
+            guard let point = lanePoint(for: lane, turn: state.turn) else {
+                continue
+            }
+            if protectedCells.contains(point) {
+                appendEvent(&state, phase: "protected-zone", actor: lane.label, target: point.id, summary: "\(lane.label) lane marker was blocked from protected cell \(point.id).")
+            } else {
+                appendEvent(&state, phase: "aircraft-lane", actor: lane.label, target: point.id, summary: "\(lane.label) crosses marker \(point.id) at \(lane.altitudeBand) altitude.")
+            }
+        }
+    }
+
+    private static func applyReaction(_ state: inout AbstractPlayableGameState, scenario: ZombieScenario) {
+        var emitted = false
+        for checkpoint in scenario.mechanics.checkpoints.sorted(by: { $0.id < $1.id }) where checkpoint.alarmTurn <= state.turn && !state.alarmedCheckpointIDs.contains(checkpoint.id) {
+            state.alarmedCheckpointIDs.insert(checkpoint.id)
+            appendEvent(&state, phase: "alarm", actor: checkpoint.label, target: "", summary: "\(checkpoint.label) enters alarm phase.")
+            emitted = true
+        }
+
+        for fire in scenario.mechanics.indirectFire.sorted(by: { $0.id < $1.id }) where fire.warningTurn == state.turn && !state.resolvedImpactIDs.contains(fire.id) {
+            appendEvent(&state, phase: "indirect-warning", actor: fire.label, target: fire.target.id, summary: "\(fire.label) warning marker appears near \(fire.target.id).")
+            emitted = true
+        }
+
+        for lane in scenario.mechanics.aircraft.sorted(by: { $0.id < $1.id }) where lane.entryTurn <= state.turn && state.turn <= lane.exitTurn {
+            if state.aircraftDamageStates[lane.id, default: .undamaged] == .undamaged {
+                state.aircraftDamageStates[lane.id] = .suppressed
+                appendEvent(&state, phase: "aircraft-react", actor: lane.label, target: scenario.title, summary: "\(lane.label) receives an abstract reaction marker.")
+                emitted = true
+            }
+        }
+
+        if !emitted {
+            appendEvent(&state, phase: "abstract-react", actor: sideName(state.humanSide, in: scenario), target: "", summary: "\(sideName(state.humanSide, in: scenario)) reacts, but no new marker changes state.")
+        }
+    }
+
+    private static func resolveTurn(_ state: inout AbstractPlayableGameState, scenario: ZombieScenario) {
+        resolveHazards(&state, scenario: scenario)
+        resolveCheckpointAlarms(&state, scenario: scenario)
+        resolveAircraft(&state, scenario: scenario)
+        resolveIndirectFire(&state, scenario: scenario)
+
+        if let outcome = outcome(for: state, scenario: scenario) {
+            finish(&state, scenario: scenario, outcome: outcome)
+            return
+        }
+
+        if state.turn >= max(1, scenario.objective.turnLimit) {
+            finish(&state, scenario: scenario, outcome: limitOutcome(for: state, scenario: scenario))
+            return
+        }
+
+        state.turn += 1
+        state.phase = .humanActivation
+    }
+
+    private static func resolveHazards(_ state: inout AbstractPlayableGameState, scenario: ZombieScenario) {
+        for vehicle in scenario.mechanics.vehicles.sorted(by: { $0.id < $1.id }) {
+            guard let point = currentPoint(for: vehicle, in: state) else {
+                continue
+            }
+            for hazard in scenario.mechanics.explosives.sorted(by: { $0.id < $1.id }) where !state.triggeredHazardIDs.contains(hazard.id) {
+                guard point.distance(to: hazard.point) <= max(0, hazard.radius) else {
+                    continue
+                }
+                state.triggeredHazardIDs.insert(hazard.id)
+                state.damagedVehicleIDs.insert(vehicle.id)
+                appendEvent(&state, phase: "abstract-blast", actor: hazard.label, target: vehicle.label, summary: "\(hazard.label) resolves against \(vehicle.label): \(hazard.abstractEffect).")
+                damageStructures(at: hazard.point, radius: hazard.radius, actor: hazard.label, state: &state, scenario: scenario)
+            }
+        }
+    }
+
+    private static func resolveCheckpointAlarms(_ state: inout AbstractPlayableGameState, scenario: ZombieScenario) {
+        for checkpoint in scenario.mechanics.checkpoints.sorted(by: { $0.id < $1.id }) where checkpoint.alarmTurn == state.turn && !state.alarmedCheckpointIDs.contains(checkpoint.id) {
+            state.alarmedCheckpointIDs.insert(checkpoint.id)
+            appendEvent(&state, phase: "alarm", actor: checkpoint.label, target: "", summary: "\(checkpoint.label) enters alarm phase.")
+        }
+    }
+
+    private static func resolveAircraft(_ state: inout AbstractPlayableGameState, scenario: ZombieScenario) {
+        let antiAirScore = scenario.actors.filter { actor in
+            actor.weapon == .heavyMachineGun || actor.weapon == .machineGun || actor.weapon == .rocket || actor.weapon == .mortar
+        }.count
+
+        for lane in scenario.mechanics.aircraft.sorted(by: { $0.id < $1.id }) where lane.entryTurn <= state.turn && state.turn <= lane.exitTurn {
+            let damageState = state.aircraftDamageStates[lane.id, default: .undamaged]
+            if antiAirScore >= lane.damageThreshold && damageState != .damaged && damageState != .downed && damageState != .exited && state.turn > lane.entryTurn {
+                state.aircraftDamageStates[lane.id] = .damaged
+                appendEvent(&state, phase: "aircraft-damage", actor: lane.label, target: scenario.title, summary: "\(lane.label) receives abstract damage and must leave the lane.")
+            } else if state.turn >= lane.exitTurn && damageState != .damaged && damageState != .downed && damageState != .exited {
+                state.aircraftDamageStates[lane.id] = .exited
+                state.exitedAircraftIDs.insert(lane.id)
+                appendEvent(&state, phase: "aircraft-exit", actor: lane.label, target: "", summary: "\(lane.label) exits the scenario lane.")
+            }
+        }
+    }
+
+    private static func resolveIndirectFire(_ state: inout AbstractPlayableGameState, scenario: ZombieScenario) {
+        let protectedCells = scenario.map.protectedCellSet
+        for fire in scenario.mechanics.indirectFire.sorted(by: { $0.id < $1.id }) {
+            if fire.setupTurn == state.turn && !hasEvent("indirect-setup", actor: fire.label, turn: state.turn, in: state) {
+                appendEvent(&state, phase: "indirect-setup", actor: fire.label, target: "", summary: "\(fire.label) enters setup phase.")
+            }
+            if fire.warningTurn == state.turn && !hasEvent("indirect-warning", actor: fire.label, turn: state.turn, in: state) {
+                appendEvent(&state, phase: "indirect-warning", actor: fire.label, target: fire.target.id, summary: "\(fire.label) warning marker appears near \(fire.target.id).")
+            }
+            guard fire.impactTurn == state.turn && !state.resolvedImpactIDs.contains(fire.id) else {
+                continue
+            }
+            state.resolvedImpactIDs.insert(fire.id)
+            let impact = deterministicImpact(for: fire, scenarioID: scenario.id)
+            if protectedCells.contains(impact) {
+                appendEvent(&state, phase: "protected-zone", actor: fire.label, target: impact.id, summary: "\(fire.label) impact was blocked from protected cell \(impact.id).")
+                continue
+            }
+            appendEvent(&state, phase: "indirect-impact", actor: fire.label, target: impact.id, summary: "\(fire.label) resolves at \(impact.id): \(fire.abstractEffect).")
+            damageStructures(at: impact, radius: fire.radius, actor: fire.label, state: &state, scenario: scenario)
+        }
+    }
+
+    private static func damageStructures(at point: GridPoint, radius: Int, actor: String, state: inout AbstractPlayableGameState, scenario: ZombieScenario) {
+        for structure in scenario.mechanics.structures.sorted(by: { $0.id < $1.id }) where point.distance(to: structure.point) <= max(0, radius) {
+            let previous = state.structureHealth[structure.id] ?? structure.health
+            let damage = max(1, 3 - min(2, structure.armor))
+            state.structureHealth[structure.id] = max(0, previous - damage)
+            appendEvent(&state, phase: "structure-damage", actor: actor, target: structure.label, summary: "\(structure.label) health \(previous) -> \(state.structureHealth[structure.id] ?? 0).")
+        }
+
+        for checkpoint in scenario.mechanics.checkpoints.sorted(by: { $0.id < $1.id }) where point.distance(to: checkpoint.point) <= max(0, radius) {
+            let previous = state.structureHealth[checkpoint.id] ?? max(1, checkpoint.armor + 1)
+            let damage = max(1, 3 - min(2, checkpoint.armor))
+            state.structureHealth[checkpoint.id] = max(0, previous - damage)
+            appendEvent(&state, phase: "structure-damage", actor: actor, target: checkpoint.label, summary: "\(checkpoint.label) health \(previous) -> \(state.structureHealth[checkpoint.id] ?? 0).")
+        }
+    }
+
+    private static func outcome(for state: AbstractPlayableGameState, scenario: ZombieScenario) -> String? {
+        if scenario.tier == .checkpoint && !state.triggeredHazardIDs.isEmpty {
+            return "checkpoint damage resolved"
+        }
+        if scenario.tier == .vehicle && !state.damagedVehicleIDs.isEmpty {
+            return "route interdicted"
+        }
+        if state.structureHealth.values.contains(where: { $0 == 0 }) {
+            return "structure disabled"
+        }
+        let hasUnresolvedIndirectFire = scenario.mechanics.indirectFire.contains { !state.resolvedImpactIDs.contains($0.id) }
+        if !scenario.mechanics.vehicles.isEmpty && allRoutesComplete(in: state, scenario: scenario) && scenario.tier == .vehicle {
+            return "route completed"
+        }
+        if !scenario.mechanics.aircraft.isEmpty && allAircraftResolved(in: state, scenario: scenario) && !hasUnresolvedIndirectFire {
+            return state.aircraftDamageStates.values.contains(.damaged) ? "aircraft damaged" : "advanced route completed"
+        }
+        return nil
+    }
+
+    private static func limitOutcome(for state: AbstractPlayableGameState, scenario: ZombieScenario) -> String {
+        if scenario.tier == .vehicle {
+            return state.damagedVehicleIDs.isEmpty ? "route completed" : "route interdicted"
+        }
+        if scenario.tier == .checkpoint {
+            return state.triggeredHazardIDs.isEmpty ? "checkpoint held" : "checkpoint damage resolved"
+        }
+        if state.aircraftDamageStates.values.contains(.damaged) {
+            return "aircraft damaged"
+        }
+        if !state.resolvedImpactIDs.isEmpty {
+            return "indirect fire resolved"
+        }
+        return "abstract scenario resolved"
+    }
+
+    private static func finish(_ state: inout AbstractPlayableGameState, scenario: ZombieScenario, outcome: String) {
+        state.outcome = outcome
+        state.phase = .finished
+        appendEvent(&state, phase: "outcome", actor: sideName(state.humanSide, in: scenario), target: scenario.title, summary: outcome)
+    }
+
+    private static func hasRouteAvailable(in state: AbstractPlayableGameState, scenario: ZombieScenario) -> Bool {
+        scenario.mechanics.vehicles.contains { vehicle in
+            !state.damagedVehicleIDs.contains(vehicle.id) && state.routeProgress[vehicle.id, default: 0] < vehicle.path.count
+        }
+    }
+
+    private static func hasActiveAircraftLane(in state: AbstractPlayableGameState, scenario: ZombieScenario) -> Bool {
+        scenario.mechanics.aircraft.contains { lane in
+            let damageState = state.aircraftDamageStates[lane.id, default: .undamaged]
+            return lane.entryTurn <= state.turn &&
+                state.turn <= lane.exitTurn &&
+                damageState != .damaged &&
+                damageState != .downed &&
+                damageState != .exited
+        }
+    }
+
+    private static func allRoutesComplete(in state: AbstractPlayableGameState, scenario: ZombieScenario) -> Bool {
+        scenario.mechanics.vehicles.allSatisfy { vehicle in
+            state.routeProgress[vehicle.id, default: 0] >= vehicle.path.count || state.damagedVehicleIDs.contains(vehicle.id)
+        }
+    }
+
+    private static func allAircraftResolved(in state: AbstractPlayableGameState, scenario: ZombieScenario) -> Bool {
+        scenario.mechanics.aircraft.allSatisfy { lane in
+            let damageState = state.aircraftDamageStates[lane.id, default: .undamaged]
+            return damageState == .damaged || damageState == .downed || damageState == .exited
+        }
+    }
+
+    private static func currentPoint(for vehicle: VehicleRoute, in state: AbstractPlayableGameState) -> GridPoint? {
+        let progress = state.routeProgress[vehicle.id, default: 0]
+        guard progress > 0, !vehicle.path.isEmpty else {
+            return nil
+        }
+        return vehicle.path[min(progress - 1, vehicle.path.count - 1)]
+    }
+
+    private static func lanePoint(for lane: AircraftLane, turn: Int) -> GridPoint? {
+        let laneIndex = min(max(turn - lane.entryTurn, 0), max(0, lane.path.count - 1))
+        return lane.path[safe: laneIndex]
+    }
+
+    private static func deterministicImpact(for fire: IndirectFirePlan, scenarioID: String) -> GridPoint {
+        guard !fire.scatter.isEmpty else {
+            return fire.target
+        }
+        let seed = stableSeed(for: scenarioID, side: fire.side, index: fire.impactTurn)
+        return fire.scatter[Int(seed % UInt32(fire.scatter.count))]
+    }
+
+    private static func hasEvent(_ phase: String, actor: String, turn: Int, in state: AbstractPlayableGameState) -> Bool {
+        state.events.contains { $0.phase == phase && $0.actor == actor && $0.turn == turn }
+    }
+
+    private static func sideName(_ side: ForceSide, in scenario: ZombieScenario) -> String {
+        scenario.forces.first { $0.side == side }.map { "\($0.name) \($0.unit)" } ?? side.rawValue
+    }
+
+    private static func appendEvent(_ state: inout AbstractPlayableGameState, phase: String, actor: String, target: String, summary: String) {
+        state.events.append(ScenarioEvent(id: state.events.count + 1, turn: state.turn, phase: phase, actor: actor, target: target, summary: summary))
+    }
+
+    private static func stableSeed(for scenarioID: String, side: ForceSide, index: Int) -> UInt32 {
+        var hash: UInt32 = 2_166_136_261
+        for byte in "\(scenarioID):\(side.rawValue):\(index)".utf8 {
+            hash ^= UInt32(byte)
+            hash &*= 16_777_619
+        }
+        return hash == 0 ? 1 : hash
+    }
+}
+
 public enum PlayableGameEngine {
     public static let fogOfWarPolicy = "Cycle 252 decision: hidden units stay out of scope for cycle 300; Play Mode uses visible actors and deterministic public logs."
 

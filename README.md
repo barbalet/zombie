@@ -55,6 +55,10 @@ Cycles 221-240 add the first manual alpha: Drummuckavall can be started from eit
 
 Cycles 241-260 add the first early-infantry manual beta. All early infantry scenarios can finish from either side through deterministic replay, protected cells remain untargetable, fog of war is explicitly deferred, actor status and turn order are visible, play logs can be filtered without altering raw events, replay seeds can be copied, and a fictional tutorial scenario guides the basic controls.
 
+Cycles 261-280 add Abstract Play Mode for selected non-infantry scenarios. Dungiven, Dungannon, Altnaveigh, Ballygawley, Derryard, Cloghoge, Glenanne, Loughgall, Battle of Newry Road, and the 1994 Lynx shootdown can now be started from either side with route advance, hold, react, and resolve commands. Vehicle, checkpoint, aircraft, warning, damage, and exit states stay high-level; mortar-only and more complex staged vehicle scenarios remain Preview Mode only.
+
+Cycles 281-300 complete the playable-game baseline. The browser labels each scenario as Playable, Preview, Deferred, or Excluded; deferred/mortar-only items cannot start Play Mode. Manual runs now have versioned save recovery, copyable JSONL logs, copyable summaries with source and scope warning, and release rehearsal coverage for the tutorial, three early scenarios, and one abstract vehicle scenario.
+
 The bundled catalog currently contains 25 scenarios:
 
 - 9 early infantry/tutorial scenarios.
@@ -63,7 +67,7 @@ The bundled catalog currently contains 25 scenarios:
 - 2 playable aircraft/advanced scenarios.
 - 2 deferred mortar/review scenarios.
 
-Advanced aircraft and mortar content uses abstract lanes, warning markers, impact events, and structure health. It does not model operational weapon procedures. Civilian-risk content is represented only through protected noncombat cells and scope warnings.
+The cycle-300 Play Mode content lock is 19 side-selectable scenarios: all 9 early infantry/tutorial scenarios plus 10 abstract vehicle/checkpoint/aircraft scenarios. Four complex vehicle scenarios remain Preview Mode only, and two mortar/deferred scenarios remain Deferred. Advanced aircraft and mortar content uses abstract lanes, warning markers, impact events, and structure health. It does not model operational weapon procedures. Civilian-risk content is represented only through protected noncombat cells and scope warnings.
 
 ## Candidate Battles
 
